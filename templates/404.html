@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}404 — Page Not Found | Yātrā AI{% endblock %}
+
+{% block content %}
+<section class="error-page-section">
+    <div class="container error-container">
+        <div class="error-card">
+            <span class="error-code">404</span>
+            <h1 class="error-title">Destination Not Found on the Map</h1>
+            <p class="error-desc">
+                The path you requested does not exist or has moved. Return to the main portal to explore authentic Indian destinations.
+            </p>
+            <div class="error-actions">
+                <a href="{{ url_for('index') }}" class="btn btn-primary">Return to Homepage</a>
+                <a href="{{ url_for('index') }}#planner" class="btn btn-outline">Open Trip Planner</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

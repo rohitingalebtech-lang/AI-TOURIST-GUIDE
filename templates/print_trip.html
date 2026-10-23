@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ trip.trip_title }} — Yātrā AI Printable Itinerary</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/print.css') }}">
+</head>
+<body class="print-body">
+    <div class="print-controls no-print">
+        <button onclick="window.print()" class="btn-print-action">🖨️ Print or Save as PDF</button>
+        <button onclick="window.close()" class="btn-print-close">Close Window</button>
+    </div>
+
+    <div class="print-document">
+        <header class="print-header">
+            <div class="print-header-top">
+                <span class="print-brand">Yātrā AI • Personalised India Travel Guide</span>
+                <span class="print-date">Generated on {{ trip.created_at[:10] }}</span>
+            </div>
+            <h1 class="print-title">{{ trip.trip_title }}</h1>
+            <div class="print-meta-grid">
+                <div><strong>Destination:</strong> {{ trip.dest_name }} ({{ trip.dest_state }})</div>
+                <div><strong>Duration:</strong> {{ trip.duration_days }} Days</div>
+                <div><strong>Starting City:</strong> {{ trip.starting_city }}</div>
+                <div><strong>Profile:</strong> {{ trip.traveler_type }}</div>
+                <div><strong>Budget Tier:</strong> {{ trip.budget_tier|capitalize }}</div>
+                <div><strong>Pace:</strong> {{ trip.pace|capitalize }}</div>
+            </div>
+        </header>
+
+        {% if trip.itinerary_data.summary %}
+        <section class="print-summary-box">
+            <h2>Financial Estimate & Budget Allocation</h2>
+            <div class="print-budget-row">
+                <div class="budget-stat">
+                    <span>Total Estimated Cost</span>
+                    <strong>{{ trip.itinerary_data.summary.total_estimated_budget_inr }}</strong>
+                </div>
+                <div class="budget-stat">
+                    <span>Per Person Per Day</span>
+                    <strong>{{ trip.itinerary_data.summary.per_person_per_day }}</strong>
+                </div>
+            </div>
+            {% if trip.itinerary_data.summary.budget_breakdown %}
+            <div class="print-breakdown-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Allocation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Accommodation (45%)</td><td>₹{{ "{:,}".format(trip.itinerary_data.summary.budget_breakdown.accommodation) }}</td></tr>
+                        <tr><td>Food & Dining (25%)</td><td>₹{{ "{:,}".format(trip.itinerary_data.summary.budget_breakdown.food_and_dining) }}</td></tr>
+                        <tr><td>Local Transport & Cabs (15%)</td><td>₹{{ "{:,}".format(trip.itinerary_data.summary.budget_breakdown.transport_and_cabs) }}</td></tr>
+                        <tr><td>Monument Tickets (10%)</td><td>₹{{ "{:,}".format(trip.itinerary_data.summary.budget_breakdown.monument_tickets_activities) }}</td></tr>
+                        <tr><td>Buffer & Tips (5%)</td><td>₹{{ "{:,}".format(trip.itinerary_data.summary.budget_breakdown.buffer_and_tips) }}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </section>
+        {% endif %}
+
+        {% if trip.notes %}
+        <div class="print-notes-box">
+            <strong>Traveler Notes:</strong> {{ trip.notes }}
+        </div>
+        {% endif %}
+
+        <section class="print-days-section">
+            <h2>Day-by-Day Daily Schedule</h2>
+            {% for day in trip.itinerary_data.days %}
+            <div class="print-day-block">
+                <div class="print-day-header">
+                    <span class="day-num">Day {{ day.day }}</span>
+                    <span class="day-theme">{{ day.theme }}</span>
+                    <span class="day-cost">Est: {{ day.estimated_daily_budget }}</span>
+                </div>
+
+                <div class="print-time-slots">
+                    <div class="time-slot">
+                        <span class="slot-label">🌅 MORNING ({{ day.morning.time }})</span>
+                        <h4>{{ day.morning.title }}</h4>
+                        <p>{{ day.morning.detail }}</p>
+                        {% if day.morning.tip %}
+                        <p class="print-tip"><em>Tip: {{ day.morning.tip }}</em></p>
+                        {% endif %}
+                        <p class="print-transport">Transport: {{ day.morning.transport }}</p>
+                    </div>
+
+                    <div class="time-slot">
+                        <span class="slot-label">☀️ AFTERNOON ({{ day.afternoon.time }})</span>
+                        <h4>{{ day.afternoon.title }}</h4>
+                        {% if day.afternoon.food_highlight %}
+                        <p class="print-food"><strong>Culinary Note:</strong> {{ day.afternoon.food_highlight }}</p>
+                        {% endif %}
+                        <p>{{ day.afternoon.detail }}</p>
+                    </div>
+
+                    <div class="time-slot">
+                        <span class="slot-label">🌆 EVENING ({{ day.evening.time }})</span>
+                        <h4>{{ day.evening.title }}</h4>
+                        <p>{{ day.evening.detail }}</p>
+                        {% if day.evening.tip %}
+                        <p class="print-tip"><em>Cultural Note: {{ day.evening.tip }}</em></p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </section>
+
+        <footer class="print-footer">
+            <div><strong>Emergency Contact:</strong> 112 (National Emergency) | 1363 (Tourist Helpline) | 1091 (Women Helpline)</div>
+            <div class="print-footnote">Generated via Yātrā AI — Personalised Indian Tourist Guide. For updates visit your online dashboard.</div>
+        </footer>
+    </div>
+</body>
+</html>

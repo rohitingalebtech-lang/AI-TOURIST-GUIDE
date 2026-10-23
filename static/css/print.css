@@ -1,0 +1,250 @@
+/* ==========================================================================
+   PRINT & PDF EXPORT STYLESHEET
+   Clean, paper-optimized layout for itineraries
+   ========================================================================== */
+
+@page {
+    size: A4 portrait;
+    margin: 1.5cm;
+}
+
+body.print-body {
+    background-color: #FFFFFF;
+    color: #111111;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 10pt;
+    line-height: 1.5;
+    margin: 0;
+    padding: 0;
+}
+
+.no-print {
+    background-color: #163A2E;
+    color: #FFF;
+    padding: 1rem;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.btn-print-action {
+    background-color: #C2633E;
+    color: #FFF;
+    border: none;
+    padding: 0.6rem 1.25rem;
+    font-weight: 700;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 10pt;
+    margin-right: 0.5rem;
+}
+
+.btn-print-close {
+    background-color: transparent;
+    color: #FFF;
+    border: 1px solid #FFF;
+    padding: 0.6rem 1rem;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 10pt;
+}
+
+.print-document {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.print-header {
+    border-bottom: 2px solid #163A2E;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.print-header-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 8pt;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.print-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 20pt;
+    color: #163A2E;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.2;
+}
+
+.print-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    font-size: 9pt;
+    background-color: #F8F6F0;
+    padding: 0.75rem;
+    border-radius: 4px;
+}
+
+.print-summary-box {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    border: 1px solid #DDD;
+    border-radius: 4px;
+    page-break-inside: avoid;
+}
+
+.print-summary-box h2, .print-days-section h2 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 13pt;
+    color: #163A2E;
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+
+.print-budget-row {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 0.75rem;
+}
+
+.budget-stat span {
+    display: block;
+    font-size: 8pt;
+    color: #666;
+    text-transform: uppercase;
+}
+
+.budget-stat strong {
+    font-size: 13pt;
+    color: #163A2E;
+}
+
+.print-breakdown-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+}
+
+.print-breakdown-table th, .print-breakdown-table td {
+    padding: 0.35rem 0.5rem;
+    border-bottom: 1px solid #EEE;
+    text-align: left;
+}
+
+.print-notes-box {
+    background-color: #FFF9E6;
+    border-left: 3px solid #D4A373;
+    padding: 0.6rem 0.85rem;
+    margin-bottom: 1.5rem;
+    font-size: 9pt;
+    page-break-inside: avoid;
+}
+
+.print-day-block {
+    border: 1px solid #CCC;
+    border-radius: 4px;
+    margin-bottom: 1.25rem;
+    page-break-inside: avoid;
+}
+
+.print-day-header {
+    background-color: #163A2E;
+    color: #FFF;
+    padding: 0.5rem 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 9.5pt;
+}
+
+.day-num {
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    margin-right: 0.5rem;
+}
+
+.day-theme {
+    font-weight: 600;
+}
+
+.day-cost {
+    font-size: 8.5pt;
+    color: #F8D38D;
+}
+
+.print-time-slots {
+    padding: 0.75rem 0.85rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+}
+
+.time-slot {
+    border: 1px solid #EAEAEA;
+    padding: 0.5rem;
+    border-radius: 3px;
+}
+
+.slot-label {
+    font-size: 7.5pt;
+    font-weight: 700;
+    color: #C2633E;
+    display: block;
+    margin-bottom: 0.2rem;
+}
+
+.time-slot h4 {
+    font-size: 8.5pt;
+    color: #163A2E;
+    margin: 0 0 0.3rem 0;
+}
+
+.time-slot p {
+    font-size: 8pt;
+    color: #444;
+    margin: 0 0 0.3rem 0;
+}
+
+.print-tip {
+    font-size: 7.5pt;
+    color: #855B00;
+}
+
+.print-food {
+    font-size: 7.5pt;
+    color: #85371B;
+}
+
+.print-transport {
+    font-size: 7.5pt;
+    color: #666;
+}
+
+.print-footer {
+    border-top: 1px solid #CCC;
+    padding-top: 1rem;
+    margin-top: 2rem;
+    font-size: 8pt;
+    color: #666;
+    text-align: center;
+    page-break-inside: avoid;
+}
+
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    .print-document {
+        margin: 0;
+        padding: 0;
+        max-width: 100%;
+    }
+}

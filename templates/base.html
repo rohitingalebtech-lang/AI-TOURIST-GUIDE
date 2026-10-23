@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Personalized AI Tourist Guide India - Discover authentic destinations, plan realistic trips, calculate budgets, compare transport, and get intelligent travel guidance.">
+    <meta name="keywords" content="India travel guide, itinerary planner, AI tourist guide, Indian railways, IRCTC tips, heritage monuments, budget calculator">
+    <meta name="theme-color" content="#163A2E">
+    <title>{% block title %}Personalized AI Tourist Guide — Discover Incredible India{% endblock %}</title>
+
+    <!-- Google Fonts: Editorial Serif + Crisp Sans-Serif -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Leaflet CSS for Interactive Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Top Utility Announcement -->
+    <div class="top-announcement">
+        <div class="container top-bar-content">
+            <span class="badge-flag">🇮🇳 Incredible India Explorer</span>
+            <span class="emergency-quick">Tourist Helpline (24x7 Multi-lingual): <strong>1363</strong> | Emergency: <strong>112</strong></span>
+            <a href="#practical-guide" class="top-link">Visa & UPI Guidelines &rarr;</a>
+        </div>
+    </div>
+
+    <!-- Header Navigation -->
+    <header class="site-header" id="siteHeader">
+        <div class="container header-inner">
+            <a href="{{ url_for('index') }}" class="site-logo">
+                <span class="logo-mark">Y</span>
+                <div class="logo-text">
+                    <span class="logo-title">Yātrā AI</span>
+                    <span class="logo-subtitle">Personalised Indian Travel Guide</span>
+                </div>
+            </a>
+
+            <!-- Navigation Menu -->
+            <nav class="main-nav" id="mainNav">
+                <ul class="nav-links">
+                    <li><a href="#explore" class="nav-link active">Destinations</a></li>
+                    <li><a href="#interactive-map" class="nav-link">Map</a></li>
+                    <li><a href="#planner" class="nav-link">Trip Planner</a></li>
+                    <li><a href="#budget" class="nav-link">Budget & Transport</a></li>
+                    <li><a href="#ai-assistant" class="nav-link">AI Assistant</a></li>
+                    <li><a href="#practical-guide" class="nav-link">Travel Guide</a></li>
+                    <li><a href="#packing-list" class="nav-link">Packing List</a></li>
+                    <li><a href="#saved-trips" class="nav-link badge-link">Saved Trips <span class="badge-counter" id="savedTripsCount">0</span></a></li>
+                </ul>
+            </nav>
+
+            <div class="header-actions">
+                <a href="#planner" class="btn btn-primary btn-sm">Plan Your Journey</a>
+                <button class="mobile-toggle" id="mobileMenuToggle" aria-label="Toggle navigation menu">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main id="mainContent">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Destination Detail Modal Container -->
+    <div class="modal-backdrop" id="destinationModal" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <span class="modal-tag" id="modalStateTag">State</span>
+                    <h2 class="modal-title" id="modalDestTitle">Destination Details</h2>
+                </div>
+                <button class="modal-close" id="modalCloseBtn" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBodyContent">
+                <!-- Dynamically loaded destination details -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast Notification -->
+    <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <div class="footer-grid">
+                <div class="footer-col brand-col">
+                    <div class="footer-logo">
+                        <span class="logo-mark">Y</span>
+                        <span class="footer-brand-title">Yātrā AI</span>
+                    </div>
+                    <p class="footer-desc">
+                        A personalized, realistic Indian travel planner designed to empower travelers with authentic cultural insights, transparent transport comparisons, accurate ASI monument fees, and culturally informed daily itineraries.
+                    </p>
+                    <div class="footer-pills">
+                        <span class="pill-badge">Free & Open Source</span>
+                        <span class="pill-badge">Zero Commercial Bias</span>
+                        <span class="pill-badge">Student Project</span>
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h3 class="footer-heading">Quick Navigation</h3>
+                    <ul class="footer-links">
+                        <li><a href="#explore">Discover Destinations</a></li>
+                        <li><a href="#interactive-map">Interactive Map of India</a></li>
+                        <li><a href="#planner">Personalized Trip Planner</a></li>
+                        <li><a href="#budget">Budget Calculator</a></li>
+                        <li><a href="#transport-compare">Transport Mode Comparison</a></li>
+                        <li><a href="#ai-assistant">Ask Ananya (AI Chatbot)</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h3 class="footer-heading">Essential Helplines</h3>
+                    <ul class="footer-contact-list">
+                        <li><strong>National Emergency:</strong> <span class="helpline-num">112</span></li>
+                        <li><strong>Tourist Police Helpline:</strong> <span class="helpline-num">1363</span> (24x7)</li>
+                        <li><strong>Women in Distress:</strong> <span class="helpline-num">1091</span></li>
+                        <li><strong>Railway Protection:</strong> <span class="helpline-num">139</span></li>
+                        <li><strong>Official e-Visa Portal:</strong> <a href="https://indianvisaonline.gov.in" target="_blank" rel="noopener">indianvisaonline.gov.in</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h3 class="footer-heading">Traveler Disclaimer</h3>
+                    <p class="footer-disclaimer">
+                        Monument entry fees, train schedules, and prices are based on current verified averages in Indian Rupees (₹). Travelers are advised to check official Indian Railways (IRCTC) and ASI ticketing portals for real-time bookings.
+                    </p>
+                    <p class="copyright-text">
+                        &copy; 2026 Personalized AI Tourist Guide India. Built for academic and traveler utility.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <!-- Custom Modular Scripts -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/map.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/planner.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/budget.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/checklist.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
