@@ -20,6 +20,13 @@ from database import (
 )
 from travel_data import TRANSPORT_ROUTES, PRACTICAL_GUIDE, PACKING_ITEMS
 from ai_engine import generate_custom_itinerary, ask_travel_ai
+from services.geo_service import (
+    search_india_all,
+    get_place_full_details,
+    get_live_weather,
+    estimate_transport_modes,
+    geocode_place
+)
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -93,13 +100,56 @@ def api_destinations():
 
     return jsonify({"success": True, "count": len(destinations), "data": destinations})
 
+@app.route("/api/search/live", methods=["GET"])
+def api_search_live():
+    """Live search across all of India using Nominatim and Wikipedia/Wikimedia."""
+    query = request.args.get("q", "").strip()
+    category = request.args.get("category", "all")
+    try:
+        limit = min(int(request.args.get("limit", 20)), 50)
+    except (ValueError, TypeError):
+        limit = 20
+
+    res = search_india_all(query=query, category=category, limit=limit)
+    return jsonify(res)
+
+@app.route("/api/place/details", methods=["GET"])
+def api_place_details():
+    """Get rich destination details, Wikimedia photo gallery, weather, and tips."""
+    place_id = request.args.get("id") or request.args.get("name") or ""
+    if not place_id:
+        return jsonify({"success": False, "error": "Place ID or name is required"}), 400
+
+    details = get_place_full_details(place_id)
+    if not details.get("success", False):
+        return jsonify(details), 404
+    return jsonify(details)
+
+@app.route("/api/weather", methods=["GET"])
+def api_weather():
+    """Get real-time weather from Open-Meteo for coordinates."""
+    try:
+        lat = float(request.args.get("lat", 28.6139))
+        lng = float(request.args.get("lng", 77.2090))
+    except (ValueError, TypeError):
+        return jsonify({"success": False, "error": "Invalid coordinates"}), 400
+
+    weather = get_live_weather(lat, lng)
+    return jsonify(weather)
+
 @app.route("/api/destinations/<dest_id>", methods=["GET"])
 def api_destination_detail(dest_id):
-    """Retrieve detailed information for a specific destination."""
+    """Retrieve detailed information for a specific destination (curated or live)."""
     dest = get_destination_by_id(dest_id)
-    if not dest:
-        return jsonify({"success": False, "error": "Destination not found"}), 404
-    return jsonify({"success": True, "data": dest})
+    if dest:
+        return jsonify({"success": True, "data": dest})
+
+    # Fallback to live details for search results
+    live_details = get_place_full_details(dest_id)
+    if live_details.get("success"):
+        return jsonify({"success": True, "data": live_details})
+
+    return jsonify({"success": False, "error": "Destination not found"}), 404
 
 @app.route("/api/attractions", methods=["GET"])
 def api_attractions():
@@ -112,7 +162,7 @@ def api_attractions():
 
 @app.route("/api/transport", methods=["GET"])
 def api_transport():
-    """Get available transport routes."""
+    """Get curated transport routes."""
     origin = request.args.get("origin")
     dest = request.args.get("destination")
 
@@ -123,6 +173,18 @@ def api_transport():
         routes = [r for r in routes if dest.lower() in r["destination"].lower()]
 
     return jsonify({"success": True, "data": routes})
+
+@app.route("/api/transport/estimate", methods=["GET"])
+def api_transport_estimate():
+    """Calculate dynamic transport estimates between any two cities in India."""
+    origin = request.args.get("origin", "Delhi").strip()
+    destination = request.args.get("destination", "Jaipur").strip()
+
+    if not origin or not destination:
+        return jsonify({"success": False, "error": "Origin and destination required"}), 400
+
+    estimates = estimate_transport_modes(origin, destination)
+    return jsonify({"success": True, "data": estimates})
 
 @app.route("/api/planner/generate", methods=["POST"])
 def api_generate_itinerary():

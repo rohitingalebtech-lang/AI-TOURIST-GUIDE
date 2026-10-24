@@ -6,78 +6,80 @@
     <div class="hero-overlay"></div>
     <div class="container hero-container">
         <div class="hero-content">
-            <span class="hero-eyebrow">Smart Cultural Tourism Platform</span>
-            <h1 class="hero-title">Discover Incredible India, Intelligently Planned.</h1>
+            <span class="hero-eyebrow">Personalized AI Tourist Guide</span>
+            <h1 class="hero-title">Discover India, Your Way.</h1>
             <p class="hero-subtitle">
-                Authentic cultural heritage, transparent transport comparisons, accurate ASI monument fees, and custom daily itineraries tailored to your budget and travel pace.
+                Explore vibrant cities, majestic hilltop forts, sacred temples, and serene backwaters. Plan realistic trips tailored to your budget and travel pace.
             </p>
 
-            <!-- Search and Filter Bar -->
+            <!-- Prominent Live Search Box -->
             <div class="hero-search-box">
                 <div class="search-input-wrap">
-                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                    <input type="text" id="destinationSearchInput" class="hero-search-input" placeholder="Search cities, states, monuments (e.g. Jaipur, Taj Mahal, Kerala, Hampi)..." autocomplete="off">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="destinationSearchInput" class="hero-search-input" placeholder="Where do you want to go? (e.g. Pune, Delhi, Goa, Chakan, Shaniwar Wada)..." autocomplete="off" aria-label="Search destinations in India">
                     <button type="button" class="search-clear-btn" id="searchClearBtn" aria-label="Clear search" style="display:none;">&times;</button>
                 </div>
-                <button type="button" class="btn btn-primary" id="heroSearchActionBtn">Find Destinations</button>
+                <button type="button" class="btn btn-primary" id="heroSearchActionBtn">Search All India</button>
             </div>
 
-            <!-- Quick Filter Chips -->
-            <div class="quick-filter-chips">
-                <span class="chips-label">Popular Themes:</span>
-                <button type="button" class="chip-btn active" data-category="all">All</button>
-                <button type="button" class="chip-btn" data-category="Heritage">🏰 Heritage & Palaces</button>
-                <button type="button" class="chip-btn" data-category="Spiritual">🪔 Sacred & Spiritual</button>
-                <button type="button" class="chip-btn" data-category="Hill Stations">🌲 Misty Hill Stations</button>
-                <button type="button" class="chip-btn" data-category="Beaches">🏖️ Tropical Beaches</button>
-                <button type="button" class="chip-btn" data-category="Adventure">🏔️ Himalayan Adventure</button>
-                <button type="button" class="chip-btn" data-category="Wildlife">🐅 Wildlife & Nature</button>
+            <!-- Quick Category Buttons -->
+            <div class="quick-category-bar">
+                <span class="cat-bar-label">Explore by Theme:</span>
+                <div class="quick-category-pills" id="quickCategoryPills">
+                    <button type="button" class="cat-pill active" data-category="all">All</button>
+                    <button type="button" class="cat-pill" data-category="Historical & Heritage">🏰 Historical</button>
+                    <button type="button" class="cat-pill" data-category="Nature & Waterfalls">🌿 Nature</button>
+                    <button type="button" class="cat-pill" data-category="Mountains & Hills">🏔️ Mountains</button>
+                    <button type="button" class="cat-pill" data-category="Beaches & Coastal">🏖️ Beaches</button>
+                    <button type="button" class="cat-pill" data-category="Spiritual & Sacred">🪔 Spiritual</button>
+                    <button type="button" class="cat-pill" data-category="Adventure">🧗 Adventure</button>
+                    <button type="button" class="cat-pill" data-category="Wildlife & Safari">🐅 Wildlife</button>
+                    <button type="button" class="cat-pill" data-category="Food & Bazaars">🍛 Food</button>
+                    <button type="button" class="cat-pill" data-category="Weekend Getaways">🎒 Weekend Getaways</button>
+                </div>
             </div>
 
-            <!-- Authentic Trust Badges -->
+            <!-- Key Platform Highlights -->
             <div class="hero-trust-bar">
                 <div class="trust-item">
-                    <span class="trust-val">15+</span>
-                    <span class="trust-lbl">Curated Regions</span>
+                    <span class="trust-val">All India</span>
+                    <span class="trust-lbl">OSM Live Geocoding</span>
                 </div>
                 <div class="trust-divider"></div>
                 <div class="trust-item">
-                    <span class="trust-val">80+</span>
-                    <span class="trust-lbl">Verified Sights</span>
+                    <span class="trust-val">Wikimedia</span>
+                    <span class="trust-lbl">Real Photographs</span>
                 </div>
                 <div class="trust-divider"></div>
                 <div class="trust-item">
-                    <span class="trust-val">100% Free</span>
-                    <span class="trust-lbl">No Sponsored Bias</span>
+                    <span class="trust-val">Open-Meteo</span>
+                    <span class="trust-lbl">Live Keyless Weather</span>
                 </div>
                 <div class="trust-divider"></div>
                 <div class="trust-item">
-                    <span class="trust-val">Live In-Depth</span>
-                    <span class="trust-lbl">IRCTC & Transit Insights</span>
+                    <span class="trust-val">IRCTC & Transit</span>
+                    <span class="trust-lbl">Transparent Estimates</span>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- SECTION 1: DISCOVER DESTINATIONS -->
+<!-- SECTION 1: POPULAR & SEARCHED DESTINATIONS -->
 <section class="section-block" id="explore">
     <div class="container">
         <div class="section-header">
             <div class="section-header-text">
                 <span class="section-tag">Explore The Subcontinent</span>
-                <h2 class="section-title">Discover Destinations Across India</h2>
-                <p class="section-desc">
-                    From the sun-bleached marble forts of Rajasthan to the emerald tea terraces of the Western Ghats and sacred rivers of Uttar Pradesh.
+                <h2 class="section-title" id="exploreSectionTitle">Popular Destinations & Attractions</h2>
+                <p class="section-desc" id="exploreSectionDesc">
+                    Photographic highlights from royal heritage forts to tropical palm-fringed coastlines and Himalayan valleys.
                 </p>
             </div>
             <!-- Region Filter Tabs -->
             <div class="filter-controls-wrap">
                 <div class="region-tabs" id="regionTabs">
-                    <button class="region-tab active" data-region="all">All Regions</button>
+                    <button class="region-tab active" data-region="all">All India</button>
                     <button class="region-tab" data-region="North">North</button>
                     <button class="region-tab" data-region="South">South</button>
                     <button class="region-tab" data-region="West">West</button>
@@ -87,52 +89,66 @@
             </div>
         </div>
 
-        <!-- Filter and Sort Bar -->
+        <!-- Filter & Search Status Bar -->
         <div class="destination-filter-bar">
-            <div class="filter-select-group">
-                <label for="filterCategorySelect" class="filter-label">Category:</label>
-                <select id="filterCategorySelect" class="filter-select">
-                    <option value="all">All Categories</option>
-                    <option value="Heritage">Heritage & Culture</option>
-                    <option value="Spiritual">Spiritual & Wellness</option>
-                    <option value="Hill Stations">Hill Stations & Nature</option>
-                    <option value="Beaches">Beaches & Coastal</option>
-                    <option value="Adventure">Adventure & Mountain</option>
-                    <option value="Wildlife">Wildlife & Nature</option>
-                </select>
-            </div>
-
-            <div class="filter-select-group">
-                <label for="filterBudgetSelect" class="filter-label">Daily Budget:</label>
-                <select id="filterBudgetSelect" class="filter-select">
-                    <option value="all">Any Budget</option>
-                    <option value="budget">Under ₹2,000 / day (Budget)</option>
-                    <option value="moderate">₹2,000 - ₹3,500 / day (Comfort)</option>
-                    <option value="luxury">Above ₹3,500 / day (Premium)</option>
-                </select>
-            </div>
-
             <div class="filter-status-text" id="filterStatusText">
-                Showing all 15 destinations
+                Showing top Indian destinations
+            </div>
+            <div class="filter-right-controls">
+                <div class="filter-select-group">
+                    <label for="filterCategorySelect" class="filter-label">Category:</label>
+                    <select id="filterCategorySelect" class="filter-select">
+                        <option value="all">All Categories</option>
+                        <option value="Historical & Heritage">Historical & Heritage</option>
+                        <option value="Spiritual & Sacred">Spiritual & Sacred</option>
+                        <option value="Mountains & Hills">Mountains & Hills</option>
+                        <option value="Beaches & Coastal">Beaches & Coastal</option>
+                        <option value="Nature & Waterfalls">Nature & Waterfalls</option>
+                        <option value="Wildlife & Safari">Wildlife & Safari</option>
+                        <option value="Food & Bazaars">Food & Bazaars</option>
+                    </select>
+                </div>
+                <div class="filter-select-group">
+                    <label for="filterSortSelect" class="filter-label">Sort by:</label>
+                    <select id="filterSortSelect" class="filter-select">
+                        <option value="popular">Recommended</option>
+                        <option value="rating">Top Rated</option>
+                        <option value="budget_low">Budget: Low to High</option>
+                        <option value="budget_high">Budget: High to Low</option>
+                    </select>
+                </div>
             </div>
         </div>
 
-        <!-- Destinations Grid -->
+        <!-- Search Loading Indicator -->
+        <div class="search-loading-bar" id="searchLoadingBar" style="display:none;">
+            <div class="spinner-ring"></div>
+            <span>Searching geographic records across India...</span>
+        </div>
+
+        <!-- Empty Search Fallback State -->
+        <div class="empty-results-box" id="emptyResultsBox" style="display:none;">
+            <div class="empty-icon">📍</div>
+            <h3>No direct matches found</h3>
+            <p>Try searching for a nearby major city (e.g. Pune, Delhi, Mumbai, Jaipur, Goa), or clear the search to explore all destinations.</p>
+            <button type="button" class="btn btn-outline btn-sm" id="resetSearchActionBtn">Reset to All Destinations</button>
+        </div>
+
+        <!-- Destinations Cards Grid -->
         <div class="destinations-grid" id="destinationsGrid">
             {% for dest in destinations %}
-            <article class="dest-card" data-id="{{ dest.id }}" data-region="{{ dest.region }}" data-category="{{ dest.category }}" data-budget="{{ dest.avg_daily_budget }}">
+            <article class="dest-card" data-id="{{ dest.id }}" data-region="{{ dest.region }}" data-category="{{ dest.category }}" data-budget="{{ dest.avg_daily_budget }}" data-rating="{{ dest.rating }}" data-lat="{{ dest.coordinates[0] }}" data-lng="{{ dest.coordinates[1] }}">
                 <div class="dest-card-media">
-                    <img src="{{ dest.image }}" alt="{{ dest.name }} - {{ dest.hero_caption }}" loading="lazy" class="dest-card-img">
+                    <img src="{{ dest.image }}" alt="{{ dest.name }} - {{ dest.hero_caption }}" loading="lazy" class="dest-card-img" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=800&q=80';">
                     <div class="dest-card-badges">
                         <span class="badge-state">{{ dest.state }}</span>
-                        <span class="badge-region">{{ dest.region }}</span>
+                        <span class="badge-category">{{ dest.category.split('&')[0] }}</span>
                     </div>
                     <div class="dest-card-rating">
                         <span class="rating-star">★</span> {{ dest.rating }}
                     </div>
                 </div>
                 <div class="dest-card-body">
-                    <span class="dest-card-category">{{ dest.category }}</span>
                     <h3 class="dest-card-title">{{ dest.name }}</h3>
                     <p class="dest-card-subtitle">{{ dest.title }}</p>
                     
@@ -143,91 +159,60 @@
                         </div>
                         <div class="meta-item">
                             <span class="meta-icon">🌤️</span>
-                            <span class="meta-text">{{ dest.best_season }}</span>
+                            <span class="meta-text">{{ dest.best_season.split('(')[0] }}</span>
                         </div>
                         <div class="meta-item">
                             <span class="meta-icon">💰</span>
-                            <span class="meta-text">~₹{{ "{:,}".format(dest.avg_daily_budget) }}/day</span>
+                            <span class="meta-text">~₹{{ "{:,}".format(dest.avg_daily_budget) }}/d</span>
                         </div>
                     </div>
 
-                    <div class="dest-highlights-tags">
-                        {% for h in dest.highlights[:3] %}
-                        <span class="highlight-tag">{{ h }}</span>
-                        {% endfor %}
-                    </div>
-
                     <div class="dest-card-actions">
-                        <button type="button" class="btn btn-outline btn-sm view-dest-btn" data-id="{{ dest.id }}">
-                            Attractions & Tips
+                        <button type="button" class="btn btn-primary btn-sm view-dest-btn" data-id="{{ dest.id }}" data-name="{{ dest.name }}">
+                            View Details
                         </button>
-                        <button type="button" class="btn btn-primary btn-sm plan-dest-btn" data-id="{{ dest.id }}" data-name="{{ dest.name }}">
-                            Plan Itinerary
+                        <button type="button" class="btn btn-outline btn-sm view-on-map-btn" data-id="{{ dest.id }}" data-name="{{ dest.name }}" data-lat="{{ dest.coordinates[0] }}" data-lng="{{ dest.coordinates[1] }}" title="Locate on map">
+                            Map
+                        </button>
+                        <button type="button" class="btn btn-icon-sm save-place-btn" data-id="{{ dest.id }}" data-name="{{ dest.name }}" title="Save to bookmarks" aria-label="Save Place">
+                            🔖
                         </button>
                     </div>
                 </div>
             </article>
             {% endfor %}
         </div>
-    </div>
-</section>
 
-<!-- SECTION 2: INTERACTIVE MAP OF INDIA -->
-<section class="section-block bg-warm" id="interactive-map">
-    <div class="container">
-        <div class="section-header">
-            <div class="section-header-text">
-                <span class="section-tag">Geographic Explorer</span>
-                <h2 class="section-title">Interactive Map of India</h2>
-                <p class="section-desc">
-                    Click any marker to view location highlights, verified entry ticket prices, and travel logistics.
-                </p>
-            </div>
-            <!-- Map Filter Pills -->
-            <div class="map-pills-bar" id="mapCategoryPills">
-                <button class="pill-filter active" data-map-cat="all">Show All</button>
-                <button class="pill-filter" data-map-cat="Heritage">Heritage</button>
-                <button class="pill-filter" data-map-cat="Spiritual">Spiritual</button>
-                <button class="pill-filter" data-map-cat="Hill Stations">Hills</button>
-                <button class="pill-filter" data-map-cat="Beaches">Beaches</button>
-                <button class="pill-filter" data-map-cat="Adventure">Mountains</button>
-            </div>
-        </div>
-
-        <div class="map-container-wrapper">
-            <div id="indiaLeafletMap" class="leaflet-map-frame" style="height: 540px; width: 100%; border-radius: 12px;"></div>
-            <div class="map-legend">
-                <div class="legend-item"><span class="legend-dot dot-heritage"></span> Heritage / Monument</div>
-                <div class="legend-item"><span class="legend-dot dot-spiritual"></span> Sacred / Spiritual</div>
-                <div class="legend-item"><span class="legend-dot dot-nature"></span> Hill Station / Nature</div>
-                <div class="legend-item"><span class="legend-dot dot-beach"></span> Coastal / Beach</div>
-            </div>
+        <!-- Load More Pagination Button -->
+        <div class="load-more-wrap" id="loadMoreWrap" style="display:none;">
+            <button type="button" class="btn btn-outline" id="loadMoreDestBtn">Load More Attractions</button>
         </div>
     </div>
 </section>
 
-<!-- SECTION 3: PERSONALIZED TRIP PLANNER -->
-<section class="section-block" id="planner">
+<!-- SECTION 2: SIMPLE BUDGET-BASED TRIP PLANNER -->
+<section class="section-block bg-warm" id="planner">
     <div class="container">
         <div class="planner-layout">
             <div class="planner-form-container">
                 <div class="section-header text-left">
                     <span class="section-tag">AI Itinerary Architect</span>
-                    <h2 class="section-title">Personalize Your Journey</h2>
+                    <h2 class="section-title">Plan Your Trip by Budget</h2>
                     <p class="section-desc">
-                        Tell us your starting point, target destination, traveler profile, and preferred pace to generate an authentic day-by-day itinerary.
+                        Specify your budget, dates, and starting hub. We calculate realistic accommodation, transit, and sightseeing costs with zero guesswork.
                     </p>
                 </div>
 
                 <form id="tripPlannerForm" class="planner-form">
                     <div class="form-row two-cols">
                         <div class="form-group">
-                            <label for="plannerStartCity" class="form-label">Starting Departure City</label>
-                            <input type="text" id="plannerStartCity" class="form-input" value="Delhi" placeholder="e.g. Delhi, Mumbai, Bengaluru" required>
+                            <label for="plannerStartCity" class="form-label">Starting City (Origin)</label>
+                            <input type="text" id="plannerStartCity" class="form-input" value="Pune" placeholder="e.g. Pune, Delhi, Mumbai, Bengaluru" required>
                         </div>
                         <div class="form-group">
                             <label for="plannerDestination" class="form-label">Destination to Visit</label>
                             <select id="plannerDestination" class="form-select" required>
+                                <option value="suggest">✨ Suggest Destinations for My Budget</option>
                                 {% for dest in destinations %}
                                 <option value="{{ dest.id }}">{{ dest.name }} ({{ dest.state }})</option>
                                 {% endfor %}
@@ -235,80 +220,95 @@
                         </div>
                     </div>
 
-                    <div class="form-row two-cols">
+                    <div class="form-row three-cols">
                         <div class="form-group">
-                            <label for="plannerDuration" class="form-label">Trip Duration (Days): <span id="durationValueDisplay" class="form-val-highlight">3 Days</span></label>
-                            <input type="range" id="plannerDuration" class="form-range" min="1" max="7" value="3" step="1">
-                            <div class="range-ticks">
-                                <span>1 Day</span>
-                                <span>3 Days</span>
-                                <span>5 Days</span>
-                                <span>7 Days</span>
-                            </div>
+                            <label for="plannerTotalBudget" class="form-label">Total Budget (INR ₹)</label>
+                            <input type="number" id="plannerTotalBudget" class="form-input" value="12000" min="1500" max="200000" step="500" placeholder="e.g. 10000">
                         </div>
                         <div class="form-group">
-                            <label for="plannerTravelerType" class="form-label">Traveler Profile</label>
-                            <select id="plannerTravelerType" class="form-select">
-                                <option value="Solo Traveler">Solo Traveler</option>
-                                <option value="Couple / Romantic">Couple / Romantic</option>
-                                <option value="Family with Kids">Family with Kids</option>
-                                <option value="Group of Friends">Group of Friends</option>
-                                <option value="Senior Citizens">Senior Citizens / Leisure</option>
+                            <label for="plannerTravelers" class="form-label">Travelers</label>
+                            <select id="plannerTravelers" class="form-select">
+                                <option value="1">1 Person (Solo)</option>
+                                <option value="2" selected>2 Persons (Couple/Friends)</option>
+                                <option value="3">3 Persons</option>
+                                <option value="4">4 Persons (Family/Group)</option>
+                                <option value="5">5+ Persons</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="plannerTransportMode" class="form-label">Preferred Transport</label>
+                            <select id="plannerTransportMode" class="form-select">
+                                <option value="Train" selected>🚆 Train (IRCTC / Vande Bharat)</option>
+                                <option value="Bus">🚌 Inter-City Bus / Volvo</option>
+                                <option value="Flight">✈️ Flight (Fastest)</option>
+                                <option value="Taxi">🚗 Taxi / Self-Drive</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="form-row two-cols">
                         <div class="form-group">
-                            <label class="form-label">Budget Tier</label>
-                            <div class="tier-radio-group">
-                                <label class="tier-card">
-                                    <input type="radio" name="plannerBudgetTier" value="budget">
-                                    <span class="tier-title">Budget</span>
-                                    <span class="tier-price">~₹1,800/d</span>
-                                </label>
-                                <label class="tier-card active">
-                                    <input type="radio" name="plannerBudgetTier" value="moderate" checked>
-                                    <span class="tier-title">Comfort</span>
-                                    <span class="tier-price">~₹3,500/d</span>
-                                </label>
-                                <label class="tier-card">
-                                    <input type="radio" name="plannerBudgetTier" value="luxury">
-                                    <span class="tier-title">Luxury</span>
-                                    <span class="tier-price">~₹8,000/d</span>
-                                </label>
-                            </div>
+                            <label for="plannerDepartDate" class="form-label">Departure Date</label>
+                            <input type="date" id="plannerDepartDate" class="form-input" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Travel Pace</label>
+                            <label for="plannerReturnDate" class="form-label">Return Date</label>
+                            <input type="date" id="plannerReturnDate" class="form-input" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row two-cols">
+                        <div class="form-group">
+                            <label class="form-label">Travel Style / Pace</label>
                             <div class="tier-radio-group">
-                                <label class="tier-card">
-                                    <input type="radio" name="plannerPace" value="relaxed">
-                                    <span class="tier-title">Relaxed</span>
-                                    <span class="tier-desc">1-2 sights/day</span>
-                                </label>
                                 <label class="tier-card active">
                                     <input type="radio" name="plannerPace" value="balanced" checked>
                                     <span class="tier-title">Balanced</span>
                                     <span class="tier-desc">2-3 sights/day</span>
                                 </label>
                                 <label class="tier-card">
+                                    <input type="radio" name="plannerPace" value="relaxed">
+                                    <span class="tier-title">Relaxed</span>
+                                    <span class="tier-desc">1-2 sights/day</span>
+                                </label>
+                                <label class="tier-card">
                                     <input type="radio" name="plannerPace" value="packed">
                                     <span class="tier-title">Packed</span>
-                                    <span class="tier-desc">4+ sights/day</span>
+                                    <span class="tier-desc">Fast-paced</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Accommodation Comfort</label>
+                            <div class="tier-radio-group">
+                                <label class="tier-card">
+                                    <input type="radio" name="plannerBudgetTier" value="budget">
+                                    <span class="tier-title">Budget</span>
+                                    <span class="tier-desc">Hostels/Homestays</span>
+                                </label>
+                                <label class="tier-card active">
+                                    <input type="radio" name="plannerBudgetTier" value="moderate" checked>
+                                    <span class="tier-title">Comfort</span>
+                                    <span class="tier-desc">3-Star / Boutique</span>
+                                </label>
+                                <label class="tier-card">
+                                    <input type="radio" name="plannerBudgetTier" value="luxury">
+                                    <span class="tier-title">Luxury</span>
+                                    <span class="tier-desc">Heritage / Resorts</span>
                                 </label>
                             </div>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Interests (Select all that apply)</label>
+                        <label class="form-label">Travel Interests</label>
                         <div class="checkbox-tag-group">
-                            <label class="check-tag"><input type="checkbox" name="interests" value="Heritage" checked> Heritage & Architecture</label>
-                            <label class="check-tag"><input type="checkbox" name="interests" value="Food" checked> Street Food & Culinary</label>
-                            <label class="check-tag"><input type="checkbox" name="interests" value="Photography" checked> Photography & Sunsets</label>
-                            <label class="check-tag"><input type="checkbox" name="interests" value="Spiritual"> Yoga & Spiritual Ghats</label>
-                            <label class="check-tag"><input type="checkbox" name="interests" value="Bazaars"> Traditional Bazaars & Crafts</label>
+                            <label class="check-tag"><input type="checkbox" name="interests" value="Heritage" checked> Heritage & Forts</label>
+                            <label class="check-tag"><input type="checkbox" name="interests" value="Nature" checked> Nature & Waterfalls</label>
+                            <label class="check-tag"><input type="checkbox" name="interests" value="Food" checked> Regional Street Food</label>
+                            <label class="check-tag"><input type="checkbox" name="interests" value="Spiritual"> Sacred & Spiritual</label>
+                            <label class="check-tag"><input type="checkbox" name="interests" value="Beaches"> Coastal & Beaches</label>
+                            <label class="check-tag"><input type="checkbox" name="interests" value="Photography"> Photography & Sunsets</label>
                         </div>
                     </div>
 
@@ -319,37 +319,45 @@
                 </form>
             </div>
 
-            <!-- Planner Highlights Sidebar -->
+            <!-- Planner Transparency Sidebar -->
             <div class="planner-sidebar">
                 <div class="sidebar-box">
-                    <h3 class="sidebar-title">Why This Itinerary Is Realistic</h3>
+                    <h3 class="sidebar-title">Transparent Travel Math</h3>
+                    <p class="sidebar-intro">Every estimate is calculated with verified baseline assumptions:</p>
                     <ul class="sidebar-features">
                         <li>
-                            <span class="feat-icon">⏱️</span>
+                            <span class="feat-icon">🏨</span>
                             <div>
-                                <strong>Pacing Accounted For</strong>
-                                <p>Addresses Indian city traffic and peak monument hours so you never rush through sights.</p>
-                            </div>
-                        </li>
-                        <li>
-                            <span class="feat-icon">🎫</span>
-                            <div>
-                                <strong>Actual Ticket Pricing</strong>
-                                <p>Reflects real Archaeological Survey of India (ASI) rates for domestic and foreign travelers.</p>
+                                <strong>Stay (45%)</strong>
+                                <p>Standard clean double occupancy rooms or verified boutique homestays.</p>
                             </div>
                         </li>
                         <li>
                             <span class="feat-icon">🍛</span>
                             <div>
-                                <strong>Authentic Food Recommendations</strong>
-                                <p>Recommends iconic regional specialties instead of generic international dishes.</p>
+                                <strong>Food & Dining (25%)</strong>
+                                <p>Authentic breakfast, regional thali lunches, and evening snacks.</p>
                             </div>
                         </li>
                         <li>
-                            <span class="feat-icon">🖨️</span>
+                            <span class="feat-icon">🚆</span>
                             <div>
-                                <strong>Printable & Export Ready</strong>
-                                <p>Save to your device, customize personal notes, or export to PDF with one click.</p>
+                                <strong>Transit & Cabs (15%)</strong>
+                                <p>Average Indian Railway 3AC or app-based cab distances.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="feat-icon">🎫</span>
+                            <div>
+                                <strong>Sightseeing & ASI (10%)</strong>
+                                <p>Exact Archaeological Survey of India (ASI) entry ticket rates.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="feat-icon">🛡️</span>
+                            <div>
+                                <strong>Emergency Buffer (5%)</strong>
+                                <p>Safety cushion for auto-rickshaw tips, water, and unexpected items.</p>
                             </div>
                         </li>
                     </ul>
@@ -362,11 +370,11 @@
             <div class="itinerary-header-bar">
                 <div class="itinerary-title-group">
                     <span class="badge-success">Curated Itinerary</span>
-                    <h3 class="itinerary-main-title" id="itineraryDisplayTitle">Jaipur 3-Day Explorer</h3>
-                    <p class="itinerary-meta" id="itineraryDisplayMeta">Starting from Delhi • Balanced Pace • Moderate Comfort</p>
+                    <h3 class="itinerary-main-title" id="itineraryDisplayTitle">Custom Travel Plan</h3>
+                    <p class="itinerary-meta" id="itineraryDisplayMeta">Starting from Pune • Balanced Pace • Moderate Comfort</p>
                 </div>
                 <div class="itinerary-actions">
-                    <button type="button" class="btn btn-outline btn-sm" id="saveTripBtn">💾 Save to My Trips</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="saveTripBtn">💾 Save to My Trips</button>
                     <button type="button" class="btn btn-outline btn-sm" id="printItineraryBtn">🖨️ Print / Save PDF</button>
                 </div>
             </div>
@@ -376,7 +384,7 @@
                 <!-- Dynamically injected -->
             </div>
 
-            <!-- Days Accordion / List -->
+            <!-- Days List -->
             <div class="days-container" id="itineraryDaysContainer">
                 <!-- Dynamically injected day cards -->
             </div>
@@ -384,24 +392,58 @@
     </div>
 </section>
 
-<!-- SECTION 4: BUDGET PLANNER & TRANSPORT COMPARISON -->
+<!-- SECTION 3: COMPACT INTERACTIVE MAP OF INDIA -->
+<section class="section-block" id="interactive-map">
+    <div class="container">
+        <div class="section-header">
+            <div class="section-header-text">
+                <span class="section-tag">Geographic Explorer</span>
+                <h2 class="section-title">Compact Interactive Map of India</h2>
+                <p class="section-desc">
+                    Synchronized with search results. Click any marker to view location highlights, verified ticket prices, and directions.
+                </p>
+            </div>
+            <!-- Map Filter Pills -->
+            <div class="map-pills-bar" id="mapCategoryPills">
+                <button class="pill-filter active" data-map-cat="all">Show All</button>
+                <button class="pill-filter" data-map-cat="Historical & Heritage">Heritage</button>
+                <button class="pill-filter" data-map-cat="Spiritual & Sacred">Spiritual</button>
+                <button class="pill-filter" data-map-cat="Mountains & Hills">Mountains</button>
+                <button class="pill-filter" data-map-cat="Beaches & Coastal">Beaches</button>
+                <button class="pill-filter" id="fitMapBoundsBtn">🎯 Center Map</button>
+            </div>
+        </div>
+
+        <div class="map-container-wrapper">
+            <div id="indiaLeafletMap" class="leaflet-map-frame" style="height: 520px; width: 100%; border-radius: 12px;"></div>
+            <div class="map-legend">
+                <div class="legend-item"><span class="legend-dot dot-heritage"></span> Heritage / Monument</div>
+                <div class="legend-item"><span class="legend-dot dot-spiritual"></span> Sacred / Spiritual</div>
+                <div class="legend-item"><span class="legend-dot dot-nature"></span> Mountains / Nature</div>
+                <div class="legend-item"><span class="legend-dot dot-beach"></span> Coastal / Beach</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 4: BUDGET & INTER-CITY TRANSPORT COMPARISON -->
 <section class="section-block bg-warm" id="budget">
     <div class="container">
         <div class="section-header">
             <div class="section-header-text">
-                <span class="section-tag">Financial Clarity & Transit</span>
-                <h2 class="section-title">Budget Calculator & Transport Comparison</h2>
+                <span class="section-tag">Financial Clarity & Route Comparison</span>
+                <h2 class="section-title">Transport Comparison & Expense Estimator</h2>
                 <p class="section-desc">
-                    Calculate realistic travel expenses in Indian Rupees (₹) and compare flights, trains, cabs, and buses for top routes.
+                    Compare Trains, Flights, Buses, and Cabs with verified links to official portals (IRCTC, RedBus, Google Flights).
                 </p>
             </div>
         </div>
 
         <div class="budget-transport-grid">
-            <!-- Left: Interactive Budget Calculator -->
+            <!-- Left: Interactive Quick Budget Calculator -->
             <div class="card-box budget-card">
                 <h3 class="card-box-title">📊 Travel Expense Estimator</h3>
-                <p class="card-box-desc">Adjust variables to calculate your estimated trip cost.</p>
+                <p class="card-box-desc">Adjust sliders for quick instant estimates in Indian Rupees (₹).</p>
 
                 <div class="calc-controls">
                     <div class="calc-control-group">
@@ -417,9 +459,9 @@
                     <div class="calc-control-group">
                         <label class="calc-label">Travel Style</label>
                         <div class="calc-tier-select" id="calcTierSelect">
-                            <button class="tier-pill" data-tier="budget">Backpacker (₹1,800/d)</button>
-                            <button class="tier-pill active" data-tier="moderate">Comfort (₹3,500/d)</button>
-                            <button class="tier-pill" data-tier="luxury">Luxury (₹8,000/d)</button>
+                            <button type="button" class="tier-pill" data-tier="budget">Backpacker (₹1,800/d)</button>
+                            <button type="button" class="tier-pill active" data-tier="moderate">Comfort (₹3,500/d)</button>
+                            <button type="button" class="tier-pill" data-tier="luxury">Luxury (₹8,000/d)</button>
                         </div>
                     </div>
                 </div>
@@ -437,8 +479,8 @@
                         <div class="progress-bar-stack">
                             <div class="progress-bar-seg seg-stay" style="width: 45%;" title="Accommodation (45%)"></div>
                             <div class="progress-bar-seg seg-food" style="width: 25%;" title="Food & Dining (25%)"></div>
-                            <div class="progress-bar-seg seg-transit" style="width: 15%;" title="Local Transit (15%)"></div>
-                            <div class="progress-bar-seg seg-tickets" style="width: 10%;" title="Attraction Tickets (10%)"></div>
+                            <div class="progress-bar-seg seg-transit" style="width: 15%;" title="Transit (15%)"></div>
+                            <div class="progress-bar-seg seg-tickets" style="width: 10%;" title="Sightseeing (10%)"></div>
                             <div class="progress-bar-seg seg-buffer" style="width: 5%;" title="Buffer (5%)"></div>
                         </div>
                         <div class="breakdown-legend">
@@ -454,95 +496,46 @@
                 <div class="saving-tips-box">
                     <span class="tip-badge">💡 Money-Saving Tip</span>
                     <p class="tip-text">
-                        Book Indian Railway tickets 120 days early on IRCTC to secure comfortable 3rd AC (3A) berths at 1/3rd the cost of last-minute flights.
+                        Book Indian Railway tickets 120 days in advance on IRCTC to secure comfortable 3rd AC (3A) berths at 1/3rd the cost of last-minute flights.
                     </p>
                 </div>
             </div>
 
-            <!-- Right: Transport Route Comparison -->
+            <!-- Right: Dynamic Transport Comparison -->
             <div class="card-box transport-card" id="transport-compare">
                 <div class="transport-header-flex">
                     <div>
                         <h3 class="card-box-title">🚆 Inter-City Transport Comparison</h3>
-                        <p class="card-box-desc">Real speed, fare ranges, and booking tips between major hubs.</p>
+                        <p class="card-box-desc">Duration and fare comparison across major transit modes.</p>
                     </div>
-                    <div class="route-selector-wrap">
-                        <select id="transportRouteSelector" class="form-select sm-select">
-                            <option value="Delhi to Jaipur">Delhi &rarr; Jaipur (280 km)</option>
-                            <option value="Delhi to Agra">Delhi &rarr; Agra (210 km)</option>
-                            <option value="Mumbai to Goa">Mumbai &rarr; Goa (590 km)</option>
-                            <option value="Bengaluru to Munnar">Bengaluru &rarr; Munnar (475 km)</option>
-                            <option value="Delhi to Varanasi">Delhi &rarr; Varanasi (820 km)</option>
-                        </select>
-                    </div>
+                </div>
+
+                <!-- Custom Route Input Row -->
+                <div class="custom-route-inputs">
+                    <input type="text" id="transitOriginInput" class="form-input sm-input" placeholder="From (e.g. Pune)" value="Pune">
+                    <span class="route-arrow">&rarr;</span>
+                    <input type="text" id="transitDestInput" class="form-input sm-input" placeholder="To (e.g. Goa)" value="Goa">
+                    <button type="button" class="btn btn-primary btn-sm" id="calcTransitBtn">Compare</button>
                 </div>
 
                 <!-- Transport Options List -->
                 <div class="transport-options-list" id="transportOptionsContainer">
-                    <!-- Dynamically populated via JS -->
+                    <!-- Populated dynamically via JS -->
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- SECTION 5: AI TRAVEL CHATBOT ("ANANYA") -->
-<section class="section-block" id="ai-assistant">
-    <div class="container">
-        <div class="chatbot-section-wrap">
-            <div class="chatbot-header-text">
-                <span class="section-tag">24x7 Intelligent Travel Desk</span>
-                <h2 class="section-title">Ask Ananya: Your AI Travel Guide</h2>
-                <p class="section-desc">
-                    Get answers about Indian railway quirks, UPI digital payments for foreigners, temple dress codes, food hygiene, scam prevention, and packing.
-                </p>
-            </div>
-
-            <div class="chatbot-card">
-                <!-- Suggested Prompts Pills -->
-                <div class="chat-suggested-prompts">
-                    <span class="prompts-label">Quick Prompts:</span>
-                    <button type="button" class="chat-pill-prompt" data-query="How do I book train tickets on IRCTC?">🚆 IRCTC Train Booking Guide</button>
-                    <button type="button" class="chat-pill-prompt" data-query="How does UPI payment work for foreign tourists?">💳 UPI for Foreigners</button>
-                    <button type="button" class="chat-pill-prompt" data-query="How do I avoid Delhi belly and eat street food safely?">🍲 Safe Street Food Practices</button>
-                    <button type="button" class="chat-pill-prompt" data-query="What is the dress code for South Indian temples?">🛕 Temple Dress Etiquette</button>
-                    <button type="button" class="chat-pill-prompt" data-query="What are common tourist scams to avoid in India?">⚠️ Tourist Scams to Avoid</button>
-                    <button type="button" class="chat-pill-prompt" data-query="What should I pack for Leh Ladakh?">🏔️ Ladakh Planning & Gear</button>
-                </div>
-
-                <!-- Chat Messages Stream -->
-                <div class="chat-window" id="chatMessagesWindow">
-                    <!-- Initial Welcome Message -->
-                    <div class="chat-msg bot-msg">
-                        <div class="msg-avatar">A</div>
-                        <div class="msg-content">
-                            <p><strong>Namaste! I am Ananya.</strong></p>
-                            <p>I am your dedicated cultural and logistics travel advisor for India. How can I assist you with your upcoming journey today?</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Chat Input Form -->
-                <form id="chatForm" class="chat-input-bar">
-                    <input type="text" id="chatUserInput" class="chat-input" placeholder="Ask anything about traveling in India (e.g. Best 3-day itinerary for Jaipur, how to use UPI, temple etiquette)..." autocomplete="off" required>
-                    <button type="submit" class="btn btn-primary" id="chatSendBtn">
-                        <span class="send-icon">Send &rarr;</span>
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- SECTION 6: PRACTICAL TRAVEL INFORMATION -->
-<section class="section-block bg-warm" id="practical-guide">
+<!-- SECTION 5: PRACTICAL TRAVEL HANDBOOK -->
+<section class="section-block" id="practical-guide">
     <div class="container">
         <div class="section-header">
             <div class="section-header-text">
-                <span class="section-tag">Essential Traveler Handbook</span>
+                <span class="section-tag">Essential Handbook</span>
                 <h2 class="section-title">Practical Travel Information</h2>
                 <p class="section-desc">
-                    Verified practical advice for a hassle-free journey across India.
+                    Verified practical advice on e-Visas, UPI payments, SIM cards, temple dress etiquette, and scam awareness.
                 </p>
             </div>
         </div>
@@ -550,11 +543,11 @@
         <div class="practical-tabs-layout">
             <!-- Tab Buttons -->
             <div class="practical-nav-pills" id="practicalPills">
-                <button class="practical-tab active" data-tab="visas">🛂 Visa & Entry</button>
-                <button class="practical-tab" data-tab="currency_and_upi">💳 Currency & UPI</button>
-                <button class="practical-tab" data-tab="sim_and_connectivity">📱 SIM & Internet</button>
-                <button class="practical-tab" data-tab="cultural_etiquette">🛕 Cultural Etiquette</button>
-                <button class="practical-tab" data-tab="safety_and_health">🛡️ Health & Safety</button>
+                <button type="button" class="practical-tab active" data-tab="visas">🛂 Visa & Entry</button>
+                <button type="button" class="practical-tab" data-tab="currency_and_upi">💳 Currency & UPI</button>
+                <button type="button" class="practical-tab" data-tab="sim_and_connectivity">📱 SIM & Internet</button>
+                <button type="button" class="practical-tab" data-tab="cultural_etiquette">🛕 Cultural Etiquette</button>
+                <button type="button" class="practical-tab" data-tab="safety_and_health">🛡️ Health & Safety</button>
             </div>
 
             <!-- Tab Content Panels -->
@@ -580,15 +573,15 @@
     </div>
 </section>
 
-<!-- SECTION 7: INTERACTIVE PACKING CHECKLIST -->
-<section class="section-block" id="packing-list">
+<!-- SECTION 6: PACKING CHECKLIST -->
+<section class="section-block bg-warm" id="packing-list">
     <div class="container">
         <div class="section-header">
             <div class="section-header-text">
                 <span class="section-tag">Smart Preparation</span>
                 <h2 class="section-title">Interactive Packing Checklist</h2>
                 <p class="section-desc">
-                    Categorized checklist tailored for Indian weather and customs. Your checked items are automatically saved in your browser.
+                    Essential items tailored for Indian weather and customs. Checked items are automatically saved in your browser.
                 </p>
             </div>
             <div class="checklist-header-actions">
@@ -635,7 +628,7 @@
 
             <!-- Add Custom Item Input -->
             <div class="add-custom-item-bar">
-                <input type="text" id="customItemInput" class="form-input" placeholder="Add custom item to checklist (e.g. Travel adapter, Binoculars)...">
+                <input type="text" id="customItemInput" class="form-input" placeholder="Add custom item (e.g. Travel adapter, Mosquito lotion)...">
                 <select id="customItemCategory" class="form-select sm-select">
                     <option value="Documents">Documents</option>
                     <option value="Clothing">Clothing</option>
@@ -648,15 +641,15 @@
     </div>
 </section>
 
-<!-- SECTION 8: SAVED TRIPS & HISTORY -->
-<section class="section-block bg-warm" id="saved-trips">
+<!-- SECTION 7: SAVED PLACES & ITINERARY HISTORY -->
+<section class="section-block" id="saved-trips">
     <div class="container">
         <div class="section-header">
             <div class="section-header-text">
                 <span class="section-tag">Your Itineraries</span>
-                <h2 class="section-title">Saved Trips & Itinerary History</h2>
+                <h2 class="section-title">Saved Trips & Bookmarks</h2>
                 <p class="section-desc">
-                    Manage and review all your saved trips, add custom notes, or export for offline travel.
+                    Manage your saved itineraries and bookmarked destinations for offline access and print ready PDFs.
                 </p>
             </div>
         </div>
@@ -701,7 +694,7 @@
                 <div class="empty-icon">🗺️</div>
                 <h3 class="empty-title">No Saved Trips Yet</h3>
                 <p class="empty-desc">
-                    Use our Personalized Trip Planner above to generate your custom day-by-day itinerary and click "Save to My Trips".
+                    Use our Trip Planner above to generate a custom day-by-day itinerary and click "Save to My Trips", or bookmark destinations as you explore!
                 </p>
                 <a href="#planner" class="btn btn-primary">Start Planning Now</a>
             </div>

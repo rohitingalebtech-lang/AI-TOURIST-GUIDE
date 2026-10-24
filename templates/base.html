@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Personalized AI Tourist Guide India - Discover authentic destinations, plan realistic trips, calculate budgets, compare transport, and get intelligent travel guidance.">
-    <meta name="keywords" content="India travel guide, itinerary planner, AI tourist guide, Indian railways, IRCTC tips, heritage monuments, budget calculator">
+    <meta name="description" content="Personalized AI Tourist Guide India — Discover authentic destinations, plan realistic trips, calculate budgets, compare transport, and get intelligent travel guidance across all of India.">
+    <meta name="keywords" content="India travel guide, itinerary planner, AI tourist guide, Indian railways, IRCTC tips, heritage monuments, budget calculator, OpenStreetMap">
     <meta name="theme-color" content="#163A2E">
     <title>{% block title %}Personalized AI Tourist Guide — Discover Incredible India{% endblock %}</title>
 
     <!-- Google Fonts: Editorial Serif + Crisp Sans-Serif -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
     <!-- Leaflet CSS for Interactive Map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
@@ -21,12 +21,14 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Top Utility Announcement -->
+    <!-- Top Announcement Bar -->
     <div class="top-announcement">
         <div class="container top-bar-content">
-            <span class="badge-flag">🇮🇳 Incredible India Explorer</span>
+            <span class="badge-flag">🇮🇳 Incredible India Travel Platform</span>
             <span class="emergency-quick">Tourist Helpline (24x7 Multi-lingual): <strong>1363</strong> | Emergency: <strong>112</strong></span>
-            <a href="#practical-guide" class="top-link">Visa & UPI Guidelines &rarr;</a>
+            <div class="top-bar-right">
+                <a href="#practical-guide" class="top-link">Visa & UPI Guidelines &rarr;</a>
+            </div>
         </div>
     </div>
 
@@ -37,26 +39,27 @@
                 <span class="logo-mark">Y</span>
                 <div class="logo-text">
                     <span class="logo-title">Yātrā AI</span>
-                    <span class="logo-subtitle">Personalised Indian Travel Guide</span>
+                    <span class="logo-subtitle">AI Travel Guide India</span>
                 </div>
             </a>
 
             <!-- Navigation Menu -->
             <nav class="main-nav" id="mainNav">
                 <ul class="nav-links">
-                    <li><a href="#explore" class="nav-link active">Destinations</a></li>
-                    <li><a href="#interactive-map" class="nav-link">Map</a></li>
-                    <li><a href="#planner" class="nav-link">Trip Planner</a></li>
-                    <li><a href="#budget" class="nav-link">Budget & Transport</a></li>
-                    <li><a href="#ai-assistant" class="nav-link">AI Assistant</a></li>
-                    <li><a href="#practical-guide" class="nav-link">Travel Guide</a></li>
-                    <li><a href="#packing-list" class="nav-link">Packing List</a></li>
-                    <li><a href="#saved-trips" class="nav-link badge-link">Saved Trips <span class="badge-counter" id="savedTripsCount">0</span></a></li>
+                    <li><a href="#explore" class="nav-link active">Explore</a></li>
+                    <li><a href="#planner" class="nav-link">Plan a Trip</a></li>
+                    <li><a href="#interactive-map" class="nav-link">Interactive Map</a></li>
+                    <li><a href="#budget" class="nav-link">Budget & Transit</a></li>
+                    <li><a href="#practical-guide" class="nav-link">Travel Handbook</a></li>
+                    <li><a href="#saved-trips" class="nav-link badge-link">Saved Places <span class="badge-counter" id="savedTripsCount">0</span></a></li>
                 </ul>
             </nav>
 
             <div class="header-actions">
-                <a href="#planner" class="btn btn-primary btn-sm">Plan Your Journey</a>
+                <button type="button" class="btn btn-outline btn-sm nav-chat-trigger" id="headerChatToggleBtn" title="Ask Ananya AI Assistant">
+                    <span class="ai-sparkle-icon">✨</span> Ask Ananya AI
+                </button>
+                <a href="#planner" class="btn btn-primary btn-sm">Plan Journey</a>
                 <button class="mobile-toggle" id="mobileMenuToggle" aria-label="Toggle navigation menu">
                     <span class="bar"></span>
                     <span class="bar"></span>
@@ -71,9 +74,71 @@
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Destination Detail Modal Container -->
-    <div class="modal-backdrop" id="destinationModal" role="dialog" aria-hidden="true">
-        <div class="modal-dialog">
+    <!-- FLOATING AI CHATBOT WIDGET ("ANANYA") -->
+    <div class="floating-chat-container" id="floatingChatContainer">
+        <!-- Floating Trigger Button -->
+        <button type="button" class="floating-chat-btn" id="floatingChatBtn" aria-label="Open AI Travel Assistant">
+            <span class="chat-btn-pulse"></span>
+            <span class="chat-btn-icon">💬</span>
+            <span class="chat-btn-label">Ask Ananya AI</span>
+        </button>
+
+        <!-- Floating Chat Window Card -->
+        <div class="floating-chat-window" id="floatingChatWindow" style="display:none;" role="dialog" aria-label="Ananya AI Travel Assistant">
+            <div class="chat-widget-header">
+                <div class="chat-agent-info">
+                    <div class="agent-avatar">A</div>
+                    <div>
+                        <h3 class="agent-name">Ananya — AI Travel Guide</h3>
+                        <span class="agent-status"><span class="status-dot"></span> Online • Multi-lingual (EN, हिंदी, मराठी)</span>
+                    </div>
+                </div>
+                <div class="chat-header-actions">
+                    <button type="button" class="chat-close-btn" id="closeFloatingChatBtn" aria-label="Close Chat">&times;</button>
+                </div>
+            </div>
+
+            <!-- Language Switcher Bar -->
+            <div class="chat-lang-bar">
+                <span class="lang-label">Language:</span>
+                <button type="button" class="lang-pill active" data-lang="en">English</button>
+                <button type="button" class="lang-pill" data-lang="hi">हिंदी</button>
+                <button type="button" class="lang-pill" data-lang="mr">मराठी</button>
+            </div>
+
+            <!-- Suggested Prompts Scroll Bar -->
+            <div class="floating-prompt-pills" id="floatingPromptPills">
+                <button type="button" class="prompt-chip" data-query="I have ₹5,000 and two days. Suggest a trip from Pune.">₹5,000 trip from Pune</button>
+                <button type="button" class="prompt-chip" data-query="Which historical places can I visit in Jaipur?">Historic Jaipur Sights</button>
+                <button type="button" class="prompt-chip" data-query="Plan a three-day family trip to Goa.">3-Day Goa Family Trip</button>
+                <button type="button" class="prompt-chip" data-query="What should I carry for a monsoon trip?">Monsoon Packing Tips</button>
+                <button type="button" class="prompt-chip" data-query="How do I book train tickets on IRCTC?">IRCTC Booking Guide</button>
+            </div>
+
+            <!-- Messages Stream -->
+            <div class="chat-messages-stream" id="floatingChatMessages">
+                <div class="chat-msg bot-msg">
+                    <div class="msg-avatar">A</div>
+                    <div class="msg-content">
+                        <p><strong>Namaste! I am Ananya.</strong></p>
+                        <p>Your 24x7 intelligent guide for exploring India. Ask me about custom weekend trips, budget recommendations, temple dress codes, train bookings, or packing essentials!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Bar -->
+            <form id="floatingChatForm" class="chat-input-bar">
+                <input type="text" id="floatingChatInput" class="chat-input" placeholder="Ask anything about travelling in India..." autocomplete="off" required>
+                <button type="submit" class="btn btn-primary" id="floatingChatSendBtn" aria-label="Send Message">
+                    <span>&rarr;</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- DESTINATION DETAIL POLISHED MODAL / DRAWER -->
+    <div class="modal-backdrop" id="destinationModal" role="dialog" aria-hidden="true" style="display:none;">
+        <div class="modal-dialog modal-lg">
             <div class="modal-header">
                 <div class="modal-title-wrap">
                     <span class="modal-tag" id="modalStateTag">State</span>
@@ -82,12 +147,17 @@
                 <button class="modal-close" id="modalCloseBtn" aria-label="Close modal">&times;</button>
             </div>
             <div class="modal-body" id="modalBodyContent">
-                <!-- Dynamically loaded destination details -->
+                <!-- Dynamically populated via JS -->
+                <div class="modal-loading-skeleton">
+                    <div class="skeleton-image"></div>
+                    <div class="skeleton-text"></div>
+                    <div class="skeleton-text"></div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Notification Toast Notification -->
+    <!-- Notification Toast Container -->
     <div class="toast-container" id="toastContainer" aria-live="polite"></div>
 
     <!-- Footer -->
@@ -100,12 +170,13 @@
                         <span class="footer-brand-title">Yātrā AI</span>
                     </div>
                     <p class="footer-desc">
-                        A personalized, realistic Indian travel planner designed to empower travelers with authentic cultural insights, transparent transport comparisons, accurate ASI monument fees, and culturally informed daily itineraries.
+                        A modern, open travel platform for discovering India. Powered by OpenStreetMap geocoding, verified ASI heritage monument insights, Wikimedia photography, and transparent transport calculations.
                     </p>
                     <div class="footer-pills">
-                        <span class="pill-badge">Free & Open Source</span>
-                        <span class="pill-badge">Zero Commercial Bias</span>
-                        <span class="pill-badge">Student Project</span>
+                        <span class="pill-badge">Free Public APIs</span>
+                        <span class="pill-badge">OpenStreetMap & Nominatim</span>
+                        <span class="pill-badge">Open-Meteo Weather</span>
+                        <span class="pill-badge">Wikimedia Commons</span>
                     </div>
                 </div>
 
@@ -113,11 +184,11 @@
                     <h3 class="footer-heading">Quick Navigation</h3>
                     <ul class="footer-links">
                         <li><a href="#explore">Discover Destinations</a></li>
+                        <li><a href="#planner">Trip Planner & Budget</a></li>
                         <li><a href="#interactive-map">Interactive Map of India</a></li>
-                        <li><a href="#planner">Personalized Trip Planner</a></li>
-                        <li><a href="#budget">Budget Calculator</a></li>
-                        <li><a href="#transport-compare">Transport Mode Comparison</a></li>
-                        <li><a href="#ai-assistant">Ask Ananya (AI Chatbot)</a></li>
+                        <li><a href="#budget">Transport Comparison</a></li>
+                        <li><a href="#practical-guide">Visa & UPI Guidelines</a></li>
+                        <li><a href="#saved-trips">Saved Itineraries</a></li>
                     </ul>
                 </div>
 
@@ -125,20 +196,20 @@
                     <h3 class="footer-heading">Essential Helplines</h3>
                     <ul class="footer-contact-list">
                         <li><strong>National Emergency:</strong> <span class="helpline-num">112</span></li>
-                        <li><strong>Tourist Police Helpline:</strong> <span class="helpline-num">1363</span> (24x7)</li>
-                        <li><strong>Women in Distress:</strong> <span class="helpline-num">1091</span></li>
-                        <li><strong>Railway Protection:</strong> <span class="helpline-num">139</span></li>
-                        <li><strong>Official e-Visa Portal:</strong> <a href="https://indianvisaonline.gov.in" target="_blank" rel="noopener">indianvisaonline.gov.in</a></li>
+                        <li><strong>Tourist Police (24x7):</strong> <span class="helpline-num">1363</span></li>
+                        <li><strong>Women's Helpline:</strong> <span class="helpline-num">1091</span></li>
+                        <li><strong>Railway Protection (RPF):</strong> <span class="helpline-num">139</span></li>
+                        <li><strong>Official e-Visa:</strong> <a href="https://indianvisaonline.gov.in" target="_blank" rel="noopener">indianvisaonline.gov.in</a></li>
                     </ul>
                 </div>
 
                 <div class="footer-col">
                     <h3 class="footer-heading">Traveler Disclaimer</h3>
                     <p class="footer-disclaimer">
-                        Monument entry fees, train schedules, and prices are based on current verified averages in Indian Rupees (₹). Travelers are advised to check official Indian Railways (IRCTC) and ASI ticketing portals for real-time bookings.
+                        Fares, opening hours, and travel durations are estimates based on standard Indian railway, road, and ASI rates. Please verify real-time schedules and bookings on IRCTC and authorized official portals before traveling.
                     </p>
                     <p class="copyright-text">
-                        &copy; 2026 Personalized AI Tourist Guide India. Built for academic and traveler utility.
+                        &copy; 2026 Personalized AI Tourist Guide India. Map data &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors.
                     </p>
                 </div>
             </div>

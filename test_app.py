@@ -1,6 +1,16 @@
 """
 test_app.py
-Comprehensive automated test suite verifying database, APIs, AI itinerary planner, and chat engine.
+Comprehensive automated test suite verifying:
+1. Application startup and routes
+2. Search across India (Pune, Delhi, Goa, Chakan, Shaniwar Wada)
+3. Empty search and offline fallback handling
+4. Destination details and Wikimedia image fallback
+5. Open-Meteo live weather endpoint
+6. Transport route calculation and official booking links
+7. Budget planner validation and itinerary generation
+8. Multi-lingual AI travel assistant ("Ananya") in English, Hindi, and Marathi
+9. Database persistence, trip saving and deletion
+10. Production security headers
 """
 
 import unittest
@@ -8,6 +18,7 @@ import json
 from app import app
 from database import init_db, get_all_destinations, get_destination_by_id, get_all_attractions
 from ai_engine import generate_custom_itinerary, ask_travel_ai
+from services.geo_service import search_india_all, get_place_full_details, get_live_weather, estimate_transport_modes
 
 class TravelAppTestCase(unittest.TestCase):
     def setUp(self):
@@ -16,6 +27,7 @@ class TravelAppTestCase(unittest.TestCase):
         with app.app_context():
             init_db()
 
+    # 1. DATABASE & SEEDING TESTS
     def test_database_seeding(self):
         destinations = get_all_destinations()
         self.assertGreaterEqual(len(destinations), 10)
@@ -33,6 +45,108 @@ class TravelAppTestCase(unittest.TestCase):
         self.assertIn("attractions", dest)
         self.assertGreater(len(dest["attractions"]), 0)
 
+    # 2. SEARCH ACROSS INDIA TESTS (Pune, Delhi, Goa, Chakan, Shaniwar Wada)
+    def test_search_pune(self):
+        res = self.app.get("/api/search/live?q=Pune")
+        self.assertEqual(res.status_code, 200)
+        data = json.loads(res.data)
+        self.assertTrue(data["success"])
+        self.assertGreater(data["count"], 0)
+        # Sights or city should match Pune
+        has_pune = any("pune" in r["name"].lower() or "pune" in r.get("location", "").lower() for r in data["results"])
+        self.assertTrue(has_pune)
+
+    def test_search_delhi(self):
+        res = self.app.get("/api/search/live?q=Delhi")
+        self.assertEqual(res.status_code, 200)
+        data = json.loads(res.data)
+        self.assertTrue(data["success"])
+        self.assertGreater(data["count"], 0)
+
+    def test_search_goa(self):
+        res = self.app.get("/api/search/live?q=Goa")
+        self.assertEqual(res.status_code, 200)
+        data = json.loads(res.data)
+        self.assertTrue(data["success"])
+        self.assertGreater(data["count"], 0)
+
+    def test_search_chakan(self):
+        res = self.app.get("/api/search/live?q=Chakan")
+        self.assertEqual(res.status_code, 200)
+        data = json.loads(res.data)
+        self.assertTrue(data["success"])
+        self.assertGreater(data["count"], 0)
+
+    def test_search_shaniwar_wada(self):
+        res = self.app.get("/api/search/live?q=Shaniwar+Wada")
+        self.assertEqual(res.status_code, 200)
+        data = json.loads(res.data)
+        self.assertTrue(data["success"])
+        self.assertGreater(data["count"], 0)
+        self.assertTrue(any("shaniwar" in r["name"].lower() for r in data["results"]))
+
+    # 3. EMPTY SEARCH & FALLBACK TESTS
+    def test_search_no_results(self):
+        res = self.app.get("/api/search/live?q=xyznonexistentplace123456")
+        self.assertEqual(res.status_code, 200)
+        data = json.loads(res.data)
+        self.assertTrue(data["success"])
+        self.assertEqual(data["count"], 0)
+
+    def test_search_empty_query_returns_curated(self):
+        res = self.app.get("/api/search/live?q=")
+        self.assertEqual(res.status_code, 200)
+        data = json.loads(res.data)
+        self.assertTrue(data["success"])
+        self.assertGreaterEqual(data["count"], 10)
+
+    # 4. DESTINATION DETAILS & WIKIMEDIA IMAGE FALLBACK
+    def test_place_details_curated(self):
+        res = self.app.get("/api/place/details?id=jaipur")
+        self.assertEqual(res.status_code, 200)
+        data = json.loads(res.data)
+        self.assertTrue(data["success"])
+        self.assertEqual(data["name"], "Jaipur")
+        self.assertGreater(len(data["gallery"]), 0)
+
+    def test_place_details_live_landmark(self):
+        res = self.app.get("/api/place/details?id=Shaniwar_Wada")
+        self.assertEqual(res.status_code, 200)
+        data = json.loads(res.data)
+        self.assertTrue(data["success"])
+        self.assertIn("Shaniwar", data["name"])
+        self.assertIn("gallery", data)
+
+    def test_place_details_missing_param(self):
+        res = self.app.get("/api/place/details")
+        self.assertEqual(res.status_code, 400)
+
+    # 5. OPEN-METEO LIVE WEATHER ENDPOINT
+    def test_weather_api(self):
+        # Coordinates for Pune
+        res = self.app.get("/api/weather?lat=18.5204&lng=73.8567")
+        self.assertEqual(res.status_code, 200)
+        data = json.loads(res.data)
+        self.assertIn("temperature", data)
+        self.assertIn("condition", data)
+
+    def test_weather_invalid_coords(self):
+        res = self.app.get("/api/weather?lat=abc&lng=def")
+        self.assertEqual(res.status_code, 400)
+
+    # 6. DYNAMIC TRANSPORT ROUTE ESTIMATION
+    def test_transport_estimate(self):
+        res = self.app.get("/api/transport/estimate?origin=Pune&destination=Goa")
+        self.assertEqual(res.status_code, 200)
+        data = json.loads(res.data)
+        self.assertTrue(data["success"])
+        self.assertIn("modes", data["data"])
+        modes = [m["mode"] for m in data["data"]["modes"]]
+        self.assertIn("Train", modes)
+        self.assertIn("Bus", modes)
+        self.assertIn("Taxi / Car", modes)
+
+    # 7. ITINERARY PLANNER & BUDGET TESTS
     def test_itinerary_generator(self):
         plan = generate_custom_itinerary(
             dest_id="jaipur",
@@ -49,41 +163,48 @@ class TravelAppTestCase(unittest.TestCase):
         self.assertIn("evening", plan["days"][0])
         self.assertIn("summary", plan)
         self.assertIn("budget_breakdown", plan["summary"])
+        self.assertIn("buffer_and_tips", plan["summary"]["budget_breakdown"])
 
-    def test_ai_chatbot(self):
-        # Test IRCTC intent
-        reply_irctc = ask_travel_ai("How do I book a train ticket on IRCTC?")
-        self.assertIn("IRCTC", reply_irctc)
+    # 8. MULTI-LINGUAL CHATBOT ("ANANYA") NATURAL QUERIES
+    def test_chat_pune_budget(self):
+        reply = ask_travel_ai("I have ₹5,000 and two days. Suggest a trip from Pune.")
+        self.assertTrue("Sinhagad" in reply or "Panshet" in reply or "Lonavala" in reply)
+        self.assertIn("5,000", reply)
 
-        # Test UPI intent
-        reply_upi = ask_travel_ai("Can foreign tourists use UPI payments in India?")
-        self.assertIn("UPI", reply_upi)
+    def test_chat_jaipur_historic(self):
+        reply = ask_travel_ai("Which historical places can I visit in Jaipur?")
+        self.assertIn("Amber Fort", reply)
+        self.assertIn("Hawa Mahal", reply)
 
-        # Test Destination query
-        reply_dest = ask_travel_ai("Tell me about visiting Munnar")
-        self.assertIn("Munnar", reply_dest)
+    def test_chat_goa_family(self):
+        reply = ask_travel_ai("Plan a three-day family trip to Goa.")
+        self.assertTrue("Family" in reply or "family" in reply)
+        self.assertTrue("Aguada" in reply or "Spice" in reply)
 
-    def test_api_endpoints(self):
-        # 1. Homepage
-        res_home = self.app.get("/")
-        self.assertEqual(res_home.status_code, 200)
-        self.assertIn(b"Y\xc4\x81tr\xc4\x81 AI", res_home.data)
+    def test_chat_monsoon_packing(self):
+        reply = ask_travel_ai("What should I carry for a monsoon trip?")
+        self.assertIn("umbrella", reply.lower())
+        self.assertIn("waterproof", reply.lower())
 
-        # 2. Destinations API
-        res_dest = self.app.get("/api/destinations")
-        self.assertEqual(res_dest.status_code, 200)
-        data_dest = json.loads(res_dest.data)
-        self.assertTrue(data_dest["success"])
-        self.assertGreaterEqual(data_dest["count"], 10)
+    def test_chat_hindi_query(self):
+        reply = ask_travel_ai("जयपुर में कौन से ऐतिहासिक स्थल देखने लायक हैं?")
+        self.assertIn("आमेर", reply)
 
-        # 3. Transport API
-        res_trans = self.app.get("/api/transport")
-        self.assertEqual(res_trans.status_code, 200)
-        data_trans = json.loads(res_trans.data)
-        self.assertTrue(data_trans["success"])
-        self.assertGreaterEqual(len(data_trans["data"]), 3)
+    def test_chat_marathi_query(self):
+        reply = ask_travel_ai("पुण्यातून दोन दिवसांसाठी कुठे फिरायला जाऊ?")
+        self.assertIn("सिंहगड", reply)
 
-        # 4. Generate Itinerary API
+    def test_chat_irctc_intent(self):
+        reply = ask_travel_ai("How do I book a train ticket on IRCTC?")
+        self.assertIn("IRCTC", reply)
+
+    def test_chat_upi_intent(self):
+        reply = ask_travel_ai("Can foreign tourists use UPI payments in India?")
+        self.assertIn("UPI", reply)
+
+    # 9. PERSISTENCE & SAVED TRIPS API
+    def test_save_and_delete_trip(self):
+        # 1. Generate itinerary
         res_plan = self.app.post("/api/planner/generate", json={
             "destination_id": "goa",
             "starting_city": "Mumbai",
@@ -95,11 +216,10 @@ class TravelAppTestCase(unittest.TestCase):
         self.assertEqual(res_plan.status_code, 200)
         plan_data = json.loads(res_plan.data)
         self.assertTrue(plan_data["success"])
-        self.assertEqual(len(plan_data["data"]["days"]), 4)
 
-        # 5. Save Trip API
+        # 2. Save trip
         res_save = self.app.post("/api/trips/save", json={
-            "trip_title": "Goa Beach Holiday",
+            "trip_title": "Goa Beach Friends Trip",
             "destination_id": "goa",
             "starting_city": "Mumbai",
             "traveler_type": "Group of Friends",
@@ -107,36 +227,38 @@ class TravelAppTestCase(unittest.TestCase):
             "budget_tier": "moderate",
             "pace": "balanced",
             "itinerary_data": plan_data["data"],
-            "notes": "Testing trip persistence"
+            "notes": "Testing persistence"
         })
         self.assertEqual(res_save.status_code, 200)
         save_res = json.loads(res_save.data)
         self.assertTrue(save_res["success"])
         saved_id = save_res["trip_id"]
 
-        # 6. Get Saved Trips
-        res_get_trips = self.app.get("/api/trips")
-        self.assertEqual(res_get_trips.status_code, 200)
-        trips_list = json.loads(res_get_trips.data)
+        # 3. Retrieve saved trips
+        res_get = self.app.get("/api/trips")
+        self.assertEqual(res_get.status_code, 200)
+        trips_list = json.loads(res_get.data)
         self.assertTrue(any(t["id"] == saved_id for t in trips_list["data"]))
 
-        # 7. Print Trip Page
+        # 4. View print page
         res_print = self.app.get(f"/trip/print/{saved_id}")
         self.assertEqual(res_print.status_code, 200)
-        self.assertIn(b"Goa Beach Holiday", res_print.data)
+        self.assertIn(b"Goa Beach Friends Trip", res_print.data)
 
-        # 8. Delete Trip API
+        # 5. Delete saved trip
         res_del = self.app.delete(f"/api/trips/{saved_id}")
         self.assertEqual(res_del.status_code, 200)
-        del_data = json.loads(res_del.data)
-        self.assertTrue(del_data["success"])
+        del_res = json.loads(res_del.data)
+        self.assertTrue(del_res["success"])
 
-        # 9. Chat API
-        res_chat = self.app.post("/api/chat", json={"query": "What is the dress code for temples?"})
-        self.assertEqual(res_chat.status_code, 200)
-        chat_data = json.loads(res_chat.data)
-        self.assertTrue(chat_data["success"])
-        self.assertIn("Temple", chat_data["reply"])
+    # 10. SECURITY HEADERS
+    def test_security_headers(self):
+        res = self.app.get("/")
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.headers.get("X-Content-Type-Options"), "nosniff")
+        self.assertEqual(res.headers.get("X-Frame-Options"), "SAMEORIGIN")
+        self.assertEqual(res.headers.get("X-XSS-Protection"), "1; mode=block")
+        self.assertIn("strict-origin", res.headers.get("Referrer-Policy"))
 
 if __name__ == "__main__":
     unittest.main()

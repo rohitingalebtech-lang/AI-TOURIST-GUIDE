@@ -1,6 +1,7 @@
 /**
  * budget.js
- * Interactive travel budget calculator and inter-city transport route comparison.
+ * Travel budget calculator and dynamic inter-city transport comparison for India.
+ * Compares Trains (IRCTC), Buses (RedBus), Flights (Google Flights), and Cabs.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -24,8 +25,8 @@ function initBudgetCalculator() {
     let currentTierRate = 3500; // Default: Moderate comfort
 
     function updateCalculations() {
-        const travelers = parseInt(travelersInput.value, 10) || 1;
-        const days = parseInt(daysInput.value, 10) || 1;
+        const travelers = parseInt(travelersInput ? travelersInput.value : '2', 10) || 1;
+        const days = parseInt(daysInput ? daysInput.value : '4', 10) || 1;
 
         if (travelersVal) travelersVal.textContent = `${travelers} Person${travelers > 1 ? 's' : ''}`;
         if (daysVal) daysVal.textContent = `${days} Day${days > 1 ? 's' : ''}`;
@@ -60,65 +61,126 @@ function initBudgetCalculator() {
 }
 
 /**
- * Transport Route Comparison Logic
+ * Dynamic Inter-City Transport Comparison Logic
  */
-let cachedRoutes = [];
-
 async function initTransportComparison() {
-    const routeSelector = document.getElementById('transportRouteSelector');
+    const originInput = document.getElementById('transitOriginInput');
+    const destInput = document.getElementById('transitDestInput');
+    const calcBtn = document.getElementById('calcTransitBtn');
     const container = document.getElementById('transportOptionsContainer');
 
-    if (!routeSelector || !container) return;
+    if (!container) return;
 
-    try {
-        const response = await fetch('/api/transport');
-        const json = await response.json();
-        if (json.success && json.data) {
-            cachedRoutes = json.data;
-            renderTransportRoute(routeSelector.value);
+    async function fetchAndRenderTransit() {
+        const origin = originInput ? originInput.value.trim() : 'Pune';
+        const dest = destInput ? destInput.value.trim() : 'Goa';
+
+        if (!origin || !dest) return;
+
+        container.innerHTML = `
+            <div class="transit-loading" style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                <div class="spinner-ring" style="margin: 0 auto 0.5rem;"></div>
+                <span>Calculating distances, train schedules & fares between ${escapeHtml(origin)} and ${escapeHtml(dest)}...</span>
+            </div>
+        `;
+
+        try {
+            const resp = await fetch(`/api/transport/estimate?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(dest)}`);
+            const data = await resp.json();
+
+            if (!data.success || !data.data) {
+                throw new Error('Unable to calculate route');
+            }
+
+            renderTransportCards(data.data);
+        } catch (e) {
+            container.innerHTML = `
+                <div style="padding:1.5rem; text-align:center; color:var(--text-muted);">
+                    <p>⚠️ Route calculation unavailable for "${escapeHtml(origin)}" to "${escapeHtml(dest)}".</p>
+                    <p style="font-size:0.8125rem;">Try major transit hubs like Pune, Mumbai, Delhi, Jaipur, Goa, or Bengaluru.</p>
+                </div>
+            `;
         }
-    } catch (e) {
-        console.error('Failed to load transport routes:', e);
     }
 
-    routeSelector.addEventListener('change', (e) => {
-        renderTransportRoute(e.target.value);
-    });
+    if (calcBtn) {
+        calcBtn.addEventListener('click', fetchAndRenderTransit);
+    }
+
+    if (destInput) {
+        destInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                fetchAndRenderTransit();
+            }
+        });
+    }
+
+    // Initial load
+    fetchAndRenderTransit();
 }
 
-function renderTransportRoute(routeName) {
+function renderTransportCards(routeData) {
     const container = document.getElementById('transportOptionsContainer');
-    if (!container || !cachedRoutes || cachedRoutes.length === 0) return;
+    if (!container) return;
 
-    // Find matching route
-    const parts = routeName.split(' to ');
-    const origin = parts[0].trim();
-    const dest = parts[1].trim();
-
-    const route = cachedRoutes.find(r => 
-        r.origin.toLowerCase().includes(origin.toLowerCase()) && 
-        r.destination.toLowerCase().includes(dest.toLowerCase())
-    );
-
-    if (!route || !route.options) {
-        container.innerHTML = '<p style="color:var(--text-muted); font-size:0.875rem;">No detailed transport comparison available for this route yet.</p>';
+    const modes = routeData.modes || [];
+    if (modes.length === 0) {
+        container.innerHTML = '<p>No transit options found for this route.</p>';
         return;
     }
 
-    container.innerHTML = route.options.map(opt => `
-        <div class="transport-opt-card">
-            <div class="transport-opt-header">
-                <span class="opt-mode-title">${opt.mode}</span>
-                <span class="opt-fare-badge">${opt.fare_range}</span>
-            </div>
-            <div class="opt-meta-row">
-                <span>⏱️ Duration: <strong>${opt.duration}</strong></span>
-                <span>⭐ Comfort: <strong>${opt.comfort_rating} / 5.0</strong></span>
-                <span>🔄 ${opt.frequency}</span>
-            </div>
-            <div class="opt-tip">
-                💡 <strong>Booking Tip:</strong> ${opt.booking_tip}
-            </div>
+    const distHeader = `
+        <div class="transit-distance-header">
+            <span>🛣️ Road Distance: <strong>~${routeData.road_distance_km} km</strong></span>
+            <span>📍 Direct Flight: <strong>~${routeData.direct_distance_km} km</strong></span>
         </div>
-    `).join('');
+    `;
+
+    const cardsHtml = modes.map(m => {
+        const badge = m.is_recommended ? '<span class="rec-badge">Recommended</span>' : '';
+
+        return `
+            <div class="transit-mode-card ${m.is_recommended ? 'recommended' : ''}">
+                <div class="transit-mode-left">
+                    <span class="mode-icon">${m.icon}</span>
+                    <div class="mode-info">
+                        <div class="mode-title-row">
+                            <h4 class="mode-name">${escapeHtml(m.mode)}</h4>
+                            ${badge}
+                        </div>
+                        <p class="mode-classes">${escapeHtml(m.classes)}</p>
+                        <p class="mode-rec-text">${escapeHtml(m.recommendation)}</p>
+                    </div>
+                </div>
+
+                <div class="transit-mode-right">
+                    <div class="mode-duration">⏱️ ${escapeHtml(m.duration)}</div>
+                    <div class="mode-price">${escapeHtml(m.price_range)}</div>
+                    <a href="${escapeHtml(m.booking_url)}" target="_blank" rel="noopener" class="btn btn-outline btn-sm booking-btn">
+                        ${escapeHtml(m.booking_label)} &rarr;
+                    </a>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    const disclaimer = `
+        <p class="transit-disclaimer">
+            <em>Disclaimer: Fares and durations are based on standard Indian railway class averages and road factors. Real-time seats and dynamic pricing vary by travel date.</em>
+        </p>
+    `;
+
+    container.innerHTML = distHeader + cardsHtml + disclaimer;
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+    }[tag] || tag));
 }

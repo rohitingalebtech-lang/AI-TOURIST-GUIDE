@@ -1,11 +1,16 @@
 /**
  * app.js
- * Core UI interactions, search filtering, modals, and notification toast.
+ * Core UI interactions, live search across India via Nominatim & Wikipedia,
+ * dynamic photographic card rendering, rich modal drawers, bookmarks, and notifications.
  */
+
+let currentSearchResults = [];
+let savedBookmarks = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
-    initDestinationFilters();
+    initBookmarks();
+    initLiveSearch();
     initModalHandlers();
     updateSavedTripsCounter();
 });
@@ -19,7 +24,7 @@ function showToast(message, type = 'info') {
 
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
-    toast.innerHTML = `<span>${message}</span>`;
+    toast.innerHTML = `<span>${escapeHtml(message)}</span>`;
 
     container.appendChild(toast);
 
@@ -31,22 +36,32 @@ function showToast(message, type = 'info') {
     }, 3500);
 }
 
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+    }[tag] || tag));
+}
+
 /**
  * Navigation & Mobile Menu
  */
 function initNavigation() {
     const mobileToggle = document.getElementById('mobileMenuToggle');
-    const mainNavLinks = document.querySelector('.nav-links');
+    const mainNav = document.getElementById('mainNav');
 
-    if (mobileToggle && mainNavLinks) {
+    if (mobileToggle && mainNav) {
         mobileToggle.addEventListener('click', () => {
-            mainNavLinks.classList.toggle('open');
+            mainNav.classList.toggle('open');
         });
 
-        // Close on link click
-        mainNavLinks.querySelectorAll('a').forEach(link => {
+        mainNav.querySelectorAll('a').forEach(link => {
             link.addEventListener('click', () => {
-                mainNavLinks.classList.remove('open');
+                mainNav.classList.remove('open');
             });
         });
     }
@@ -57,7 +72,7 @@ function initNavigation() {
         const scrollY = window.pageYOffset;
         sections.forEach(current => {
             const sectionHeight = current.offsetHeight;
-            const sectionTop = current.offsetTop - 120;
+            const sectionTop = current.offsetTop - 130;
             const sectionId = current.getAttribute('id');
 
             const navMatch = document.querySelector(`.nav-links a[href*="${sectionId}"]`);
@@ -73,326 +88,658 @@ function initNavigation() {
 }
 
 /**
- * Destination Search & Filtering System
+ * Bookmarks / Saved Places System
  */
-function initDestinationFilters() {
+function initBookmarks() {
+    try {
+        const saved = localStorage.getItem('yatra_saved_bookmarks');
+        if (saved) {
+            savedBookmarks = JSON.parse(saved);
+        }
+    } catch (e) {
+        savedBookmarks = [];
+    }
+}
+
+function toggleBookmark(placeId, placeName) {
+    const idx = savedBookmarks.findIndex(b => b.id === placeId);
+    if (idx >= 0) {
+        savedBookmarks.splice(idx, 1);
+        showToast(`Removed ${placeName} from saved places`, 'info');
+    } else {
+        savedBookmarks.push({ id: placeId, name: placeName, date: new Date().toISOString() });
+        showToast(`Saved ${placeName} to your places!`, 'success');
+    }
+
+    try {
+        localStorage.setItem('yatra_saved_bookmarks', JSON.stringify(savedBookmarks));
+    } catch (e) {}
+
+    updateSavedTripsCounter();
+    updateBookmarkButtonStates();
+}
+
+function updateBookmarkButtonStates() {
+    document.querySelectorAll('.save-place-btn').forEach(btn => {
+        const id = btn.getAttribute('data-id');
+        if (savedBookmarks.some(b => b.id === id)) {
+            btn.classList.add('saved');
+            btn.innerHTML = '❤️';
+            btn.title = 'Saved to Bookmarks';
+        } else {
+            btn.classList.remove('saved');
+            btn.innerHTML = '🔖';
+            btn.title = 'Save to Bookmarks';
+        }
+    });
+}
+
+function updateSavedTripsCounter() {
+    const counter = document.getElementById('savedTripsCount');
+    if (!counter) return;
+
+    fetch('/api/trips')
+        .then(res => res.json())
+        .then(data => {
+            const serverTrips = (data.success && data.data) ? data.data.length : 0;
+            const total = serverTrips + savedBookmarks.length;
+            counter.textContent = total;
+        })
+        .catch(() => {
+            counter.textContent = savedBookmarks.length;
+        });
+}
+
+/**
+ * Live Search Across India System
+ */
+let searchDebounceTimer = null;
+
+function initLiveSearch() {
     const searchInput = document.getElementById('destinationSearchInput');
     const searchClearBtn = document.getElementById('searchClearBtn');
     const heroSearchBtn = document.getElementById('heroSearchActionBtn');
-    const chipButtons = document.querySelectorAll('.chip-btn');
-    const regionTabs = document.querySelectorAll('.region-tab');
-    const categorySelect = document.getElementById('filterCategorySelect');
-    const budgetSelect = document.getElementById('filterBudgetSelect');
-    const statusText = document.getElementById('filterStatusText');
-    const cards = document.querySelectorAll('.dest-card');
+    const catPills = document.querySelectorAll('#quickCategoryPills .cat-pill');
+    const regionTabs = document.querySelectorAll('#regionTabs .region-tab');
+    const catSelect = document.getElementById('filterCategorySelect');
+    const sortSelect = document.getElementById('filterSortSelect');
+    const resetBtn = document.getElementById('resetSearchActionBtn');
 
-    let currentRegion = 'all';
     let currentCategory = 'all';
-    let currentBudget = 'all';
-    let currentSearchTerm = '';
+    let currentRegion = 'all';
 
-    function applyFilters() {
-        let visibleCount = 0;
-
-        cards.forEach(card => {
-            const cardRegion = card.getAttribute('data-region') || '';
-            const cardCategory = card.getAttribute('data-category') || '';
-            const cardBudget = parseInt(card.getAttribute('data-budget') || '0', 10);
-            const cardText = card.textContent.toLowerCase();
-
-            let matchesRegion = (currentRegion === 'all' || cardRegion.toLowerCase() === currentRegion.toLowerCase());
-            let matchesCategory = (currentCategory === 'all' || cardCategory.toLowerCase().includes(currentCategory.toLowerCase()));
-            
-            let matchesBudget = true;
-            if (currentBudget === 'budget') matchesBudget = cardBudget <= 2000;
-            else if (currentBudget === 'moderate') matchesBudget = cardBudget > 2000 && cardBudget <= 3500;
-            else if (currentBudget === 'luxury') matchesBudget = cardBudget > 3500;
-
-            let matchesSearch = (!currentSearchTerm || cardText.includes(currentSearchTerm));
-
-            if (matchesRegion && matchesCategory && matchesBudget && matchesSearch) {
-                card.style.display = 'flex';
-                visibleCount++;
-            } else {
-                card.style.display = 'none';
-            }
-        });
-
-        if (statusText) {
-            statusText.textContent = `Showing ${visibleCount} of ${cards.length} destinations`;
-        }
-    }
-
-    // Search Input listeners
+    // Search input with debounce
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
-            currentSearchTerm = e.target.value.trim().toLowerCase();
+            const query = e.target.value.trim();
             if (searchClearBtn) {
-                searchClearBtn.style.display = currentSearchTerm ? 'block' : 'none';
+                searchClearBtn.style.display = query ? 'block' : 'none';
             }
-            applyFilters();
+
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                performLiveSearch(query, currentCategory);
+            }, 350);
         });
 
-        if (searchClearBtn) {
-            searchClearBtn.addEventListener('click', () => {
-                searchInput.value = '';
-                currentSearchTerm = '';
-                searchClearBtn.style.display = 'none';
-                applyFilters();
-            });
-        }
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                clearTimeout(searchDebounceTimer);
+                performLiveSearch(searchInput.value.trim(), currentCategory);
+                scrollToExplore();
+            }
+        });
+    }
+
+    if (searchClearBtn) {
+        searchClearBtn.addEventListener('click', () => {
+            if (searchInput) searchInput.value = '';
+            searchClearBtn.style.display = 'none';
+            performLiveSearch('', 'all');
+        });
     }
 
     if (heroSearchBtn) {
         heroSearchBtn.addEventListener('click', () => {
-            const exploreSection = document.getElementById('explore');
-            if (exploreSection) {
-                exploreSection.scrollIntoView({ behavior: 'smooth' });
-            }
+            const q = searchInput ? searchInput.value.trim() : '';
+            performLiveSearch(q, currentCategory);
+            scrollToExplore();
         });
     }
 
-    // Quick Theme Chips
-    chipButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            chipButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            currentCategory = btn.getAttribute('data-category');
-            if (categorySelect) categorySelect.value = currentCategory;
-            applyFilters();
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            if (searchInput) searchInput.value = '';
+            if (searchClearBtn) searchClearBtn.style.display = 'none';
+            catPills.forEach(p => p.classList.remove('active'));
+            const allPill = document.querySelector('#quickCategoryPills .cat-pill[data-category="all"]');
+            if (allPill) allPill.classList.add('active');
+            performLiveSearch('', 'all');
+        });
+    }
 
-            const exploreSection = document.getElementById('explore');
-            if (exploreSection && window.pageYOffset < 200) {
-                exploreSection.scrollIntoView({ behavior: 'smooth' });
-            }
+    // Quick Category pills in Hero
+    catPills.forEach(pill => {
+        pill.addEventListener('click', () => {
+            catPills.forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+
+            currentCategory = pill.getAttribute('data-category') || 'all';
+            if (catSelect) catSelect.value = currentCategory;
+
+            const q = searchInput ? searchInput.value.trim() : '';
+            performLiveSearch(q, currentCategory);
+            scrollToExplore();
         });
     });
+
+    // Category Select in filter bar
+    if (catSelect) {
+        catSelect.addEventListener('change', (e) => {
+            currentCategory = e.target.value;
+            catPills.forEach(p => {
+                p.classList.toggle('active', p.getAttribute('data-category') === currentCategory);
+            });
+            const q = searchInput ? searchInput.value.trim() : '';
+            performLiveSearch(q, currentCategory);
+        });
+    }
+
+    // Sort select
+    if (sortSelect) {
+        sortSelect.addEventListener('change', () => {
+            sortAndRenderCards();
+        });
+    }
 
     // Region Tabs
     regionTabs.forEach(tab => {
         tab.addEventListener('click', () => {
             regionTabs.forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
-            currentRegion = tab.getAttribute('data-region');
-            applyFilters();
+            currentRegion = tab.getAttribute('data-region') || 'all';
+            filterLocalCardsByRegion(currentRegion);
         });
     });
 
-    // Dropdown Selects
-    if (categorySelect) {
-        categorySelect.addEventListener('change', (e) => {
-            currentCategory = e.target.value;
-            chipButtons.forEach(b => {
-                if (b.getAttribute('data-category') === currentCategory) b.classList.add('active');
-                else b.classList.remove('active');
-            });
-            applyFilters();
-        });
-    }
-
-    if (budgetSelect) {
-        budgetSelect.addEventListener('change', (e) => {
-            currentBudget = e.target.value;
-            applyFilters();
-        });
-    }
-
-    // "Plan Itinerary" quick buttons on cards
-    document.querySelectorAll('.plan-dest-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const destId = e.currentTarget.getAttribute('data-id');
-            const plannerDestSelect = document.getElementById('plannerDestination');
-            if (plannerDestSelect) {
-                plannerDestSelect.value = destId;
+    // Delegate Card Actions
+    const grid = document.getElementById('destinationsGrid');
+    if (grid) {
+        grid.addEventListener('click', (e) => {
+            const viewBtn = e.target.closest('.view-dest-btn');
+            if (viewBtn) {
+                const id = viewBtn.getAttribute('data-id');
+                const name = viewBtn.getAttribute('data-name');
+                openDestinationDetails(id || name);
+                return;
             }
-            const plannerSection = document.getElementById('planner');
-            if (plannerSection) {
-                plannerSection.scrollIntoView({ behavior: 'smooth' });
-                showToast(`Selected destination for your trip!`, 'info');
+
+            const mapBtn = e.target.closest('.view-on-map-btn');
+            if (mapBtn) {
+                const id = mapBtn.getAttribute('data-id');
+                const lat = parseFloat(mapBtn.getAttribute('data-lat'));
+                const lng = parseFloat(mapBtn.getAttribute('data-lng'));
+                focusMapOnLocation(id, lat, lng);
+                return;
+            }
+
+            const saveBtn = e.target.closest('.save-place-btn');
+            if (saveBtn) {
+                const id = saveBtn.getAttribute('data-id');
+                const name = saveBtn.getAttribute('data-name');
+                toggleBookmark(id, name);
+                return;
             }
         });
-    });
+    }
+}
+
+function scrollToExplore() {
+    const exploreSec = document.getElementById('explore');
+    if (exploreSec) {
+        exploreSec.scrollIntoView({ behavior: 'smooth' });
+    }
 }
 
 /**
- * Destination Details Modal
+ * Fetch and render search results from `/api/search/live`
+ */
+async function performLiveSearch(query, category = 'all') {
+    const loadingBar = document.getElementById('searchLoadingBar');
+    const emptyBox = document.getElementById('emptyResultsBox');
+    const grid = document.getElementById('destinationsGrid');
+    const statusText = document.getElementById('filterStatusText');
+    const titleEl = document.getElementById('exploreSectionTitle');
+
+    if (!query) {
+        // Reload default server-rendered destinations if empty
+        if (loadingBar) loadingBar.style.display = 'none';
+        if (emptyBox) emptyBox.style.display = 'none';
+        if (titleEl) titleEl.textContent = 'Popular Destinations & Attractions';
+        if (statusText) statusText.textContent = 'Showing popular destinations across India';
+        filterCardsByCategory(category);
+        return;
+    }
+
+    if (loadingBar) loadingBar.style.display = 'flex';
+    if (emptyBox) emptyBox.style.display = 'none';
+
+    try {
+        const url = `/api/search/live?q=${encodeURIComponent(query)}&category=${encodeURIComponent(category)}&limit=24`;
+        const resp = await fetch(url);
+        const data = await resp.json();
+
+        if (loadingBar) loadingBar.style.display = 'none';
+
+        if (!data.success || !data.results || data.results.length === 0) {
+            if (grid) grid.innerHTML = '';
+            if (emptyBox) emptyBox.style.display = 'block';
+            if (statusText) statusText.textContent = `No attractions found for "${query}"`;
+            currentSearchResults = [];
+            if (window.updateMapMarkersWithResults) {
+                window.updateMapMarkersWithResults([]);
+            }
+            return;
+        }
+
+        currentSearchResults = data.results;
+        if (emptyBox) emptyBox.style.display = 'none';
+        if (titleEl) {
+            titleEl.textContent = data.geocoded ? `Attractions & Sights in ${data.geocoded.name}` : `Search Results for "${query}"`;
+        }
+        if (statusText) {
+            statusText.textContent = `Found ${data.count} destinations & attractions across India`;
+        }
+
+        renderSearchResultsCards(currentSearchResults);
+
+        // Update map markers
+        if (window.updateMapMarkersWithResults) {
+            window.updateMapMarkersWithResults(currentSearchResults);
+        }
+
+    } catch (err) {
+        if (loadingBar) loadingBar.style.display = 'none';
+        console.error('Search failed:', err);
+        showToast('Network issue while searching. Showing local destinations.', 'warning');
+    }
+}
+
+function renderSearchResultsCards(results) {
+    const grid = document.getElementById('destinationsGrid');
+    if (!grid) return;
+
+    grid.innerHTML = results.map(item => {
+        const image = item.image || 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=800&q=80';
+        const isSaved = savedBookmarks.some(b => b.id === item.id);
+        const distBadge = item.distance_km !== undefined && item.distance_km > 0 ? 
+            `<span class="badge-dist">📍 ${item.distance_km} km away</span>` : '';
+        const budgetText = item.avg_daily_budget ? `~₹${item.avg_daily_budget.toLocaleString()}/d` : 'Free entry / Variable';
+
+        return `
+        <article class="dest-card" data-id="${escapeHtml(item.id)}" data-category="${escapeHtml(item.category)}" data-budget="${item.avg_daily_budget || 0}" data-lat="${item.lat || ''}" data-lng="${item.lng || ''}">
+            <div class="dest-card-media">
+                <img src="${escapeHtml(image)}" alt="${escapeHtml(item.name)}" loading="lazy" class="dest-card-img" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=800&q=80';">
+                <div class="dest-card-badges">
+                    <span class="badge-state">${escapeHtml(item.state || 'India')}</span>
+                    <span class="badge-category">${escapeHtml(item.category.split('&')[0])}</span>
+                </div>
+                ${distBadge}
+            </div>
+            <div class="dest-card-body">
+                <h3 class="dest-card-title">${escapeHtml(item.name)}</h3>
+                <p class="dest-card-subtitle">${escapeHtml(item.description)}</p>
+                
+                <div class="dest-quick-meta">
+                    <div class="meta-item">
+                        <span class="meta-icon">💰</span>
+                        <span class="meta-text">${budgetText}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-icon">🏛️</span>
+                        <span class="meta-text">${escapeHtml(item.category.split('&')[0])}</span>
+                    </div>
+                </div>
+
+                <div class="dest-card-actions">
+                    <button type="button" class="btn btn-primary btn-sm view-dest-btn" data-id="${escapeHtml(item.id)}" data-name="${escapeHtml(item.name)}">
+                        View Details
+                    </button>
+                    <button type="button" class="btn btn-outline btn-sm view-on-map-btn" data-id="${escapeHtml(item.id)}" data-name="${escapeHtml(item.name)}" data-lat="${item.lat || ''}" data-lng="${item.lng || ''}" title="View on map">
+                        Map
+                    </button>
+                    <button type="button" class="btn btn-icon-sm save-place-btn ${isSaved ? 'saved' : ''}" data-id="${escapeHtml(item.id)}" data-name="${escapeHtml(item.name)}" title="Save Place" aria-label="Save Place">
+                        ${isSaved ? '❤️' : '🔖'}
+                    </button>
+                </div>
+            </div>
+        </article>
+        `;
+    }).join('');
+}
+
+function filterCardsByCategory(category) {
+    const cards = document.querySelectorAll('.dest-card');
+    let visible = 0;
+    cards.forEach(card => {
+        const cat = card.getAttribute('data-category') || '';
+        if (category === 'all' || cat.toLowerCase().includes(category.toLowerCase())) {
+            card.style.display = 'flex';
+            visible++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    const statusText = document.getElementById('filterStatusText');
+    if (statusText) {
+        statusText.textContent = `Showing ${visible} destinations`;
+    }
+}
+
+function filterLocalCardsByRegion(region) {
+    const cards = document.querySelectorAll('.dest-card');
+    let visible = 0;
+    cards.forEach(card => {
+        const cardRegion = card.getAttribute('data-region') || '';
+        if (region === 'all' || cardRegion.toLowerCase() === region.toLowerCase()) {
+            card.style.display = 'flex';
+            visible++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    const statusText = document.getElementById('filterStatusText');
+    if (statusText) {
+        statusText.textContent = `Showing ${visible} destinations in ${region === 'all' ? 'All India' : region}`;
+    }
+}
+
+function sortAndRenderCards() {
+    const sortVal = document.getElementById('filterSortSelect')?.value || 'popular';
+    const grid = document.getElementById('destinationsGrid');
+    if (!grid) return;
+
+    const cards = Array.from(grid.querySelectorAll('.dest-card'));
+    cards.sort((a, b) => {
+        if (sortVal === 'rating') {
+            const rA = parseFloat(a.getAttribute('data-rating') || '4.0');
+            const rB = parseFloat(b.getAttribute('data-rating') || '4.0');
+            return rB - rA;
+        } else if (sortVal === 'budget_low') {
+            const bA = parseInt(a.getAttribute('data-budget') || '0', 10);
+            const bB = parseInt(b.getAttribute('data-budget') || '0', 10);
+            return bA - bB;
+        } else if (sortVal === 'budget_high') {
+            const bA = parseInt(a.getAttribute('data-budget') || '0', 10);
+            const bB = parseInt(b.getAttribute('data-budget') || '0', 10);
+            return bB - bA;
+        }
+        return 0;
+    });
+
+    cards.forEach(c => grid.appendChild(c));
+}
+
+function focusMapOnLocation(placeId, lat, lng) {
+    if (!lat || !lng) {
+        showToast('Coordinates not available for this landmark', 'warning');
+        return;
+    }
+
+    const mapElement = document.getElementById('interactive-map');
+    if (mapElement) {
+        mapElement.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    if (window.focusLeafletMap) {
+        window.focusLeafletMap(lat, lng, placeId);
+    }
+}
+
+/**
+ * Rich Destination Details Modal
  */
 function initModalHandlers() {
     const modal = document.getElementById('destinationModal');
     const closeBtn = document.getElementById('modalCloseBtn');
-    const modalBody = document.getElementById('modalBodyContent');
-    const modalTitle = document.getElementById('modalDestTitle');
-    const modalState = document.getElementById('modalStateTag');
 
-    if (!modal) return;
-
-    // Open detail modal when clicking "Attractions & Tips"
-    document.querySelectorAll('.view-dest-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            const destId = e.currentTarget.getAttribute('data-id');
-            await openDestinationModal(destId);
+    if (closeBtn && modal) {
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+            modal.setAttribute('aria-hidden', 'true');
         });
-    });
 
-    // Close modal
-    closeBtn.addEventListener('click', () => {
-        modal.classList.remove('open');
-    });
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+                modal.setAttribute('aria-hidden', 'true');
+            }
+        });
 
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.classList.remove('open');
-        }
-    });
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.classList.contains('open')) {
-            modal.classList.remove('open');
-        }
-    });
-}
-
-async function openDestinationModal(destId) {
-    const modal = document.getElementById('destinationModal');
-    const modalBody = document.getElementById('modalBodyContent');
-    const modalTitle = document.getElementById('modalDestTitle');
-    const modalState = document.getElementById('modalStateTag');
-
-    modalBody.innerHTML = '<div style="text-align:center; padding: 3rem;"><p>Loading cultural guide & verified attractions...</p></div>';
-    modal.classList.add('open');
-
-    try {
-        const response = await fetch(`/api/destinations/${destId}`);
-        const result = await response.json();
-
-        if (!result.success || !result.data) {
-            modalBody.innerHTML = '<p>Unable to load destination details.</p>';
-            return;
-        }
-
-        const d = result.data;
-        modalTitle.textContent = `${d.name} — ${d.title}`;
-        modalState.textContent = `${d.state} (${d.region} India)`;
-
-        // Build Attractions List HTML
-        let attractionsHtml = '';
-        if (d.attractions && d.attractions.length > 0) {
-            attractionsHtml = d.attractions.map(attr => `
-                <div class="modal-attr-item">
-                    <div class="modal-attr-head">
-                        <span class="modal-attr-name">🏛️ ${attr.name}</span>
-                        <span class="modal-attr-pricing">Fee: ₹${attr.entry_fee_inr} (Indians) | ₹${attr.entry_fee_foreign} (Foreign)</span>
-                    </div>
-                    <p style="font-size:0.8125rem; color:var(--text-muted); margin-bottom:0.4rem;">${attr.description}</p>
-                    <p style="font-size:0.75rem; color:#714C00; background:#FAF5E8; padding:0.3rem 0.5rem; border-radius:3px;">
-                        💡 <strong>Insider Tip:</strong> ${attr.insider_tip || 'Visit during early morning hours to beat lines.'}
-                    </p>
-                    <div style="font-size:0.6875rem; color:var(--text-subtle); margin-top:0.35rem;">
-                        ⏱️ Timings: ${attr.timings} • Recommended: ${attr.ideal_duration}
-                    </div>
-                </div>
-            `).join('');
-        } else {
-            attractionsHtml = '<p style="font-size:0.875rem; color:var(--text-muted);">Attraction details available in daily itinerary generator.</p>';
-        }
-
-        // Build Foods HTML
-        let foodsHtml = '';
-        if (d.famous_foods && d.famous_foods.length > 0) {
-            foodsHtml = d.famous_foods.map(f => `
-                <div class="food-card">
-                    <span class="food-name">🍛 ${f.dish}</span>
-                    <span class="food-desc">${f.desc}</span>
-                </div>
-            `).join('');
-        }
-
-        // Build Culture Tips HTML
-        let tipsHtml = '';
-        if (d.culture_tips && d.culture_tips.length > 0) {
-            tipsHtml = d.culture_tips.map(tip => `<li>${tip}</li>`).join('');
-        }
-
-        // Build How to reach HTML
-        const reach = d.how_to_reach || {};
-
-        modalBody.innerHTML = `
-            <div class="modal-hero-strip">
-                <img src="${d.image}" alt="${d.name}" class="modal-hero-img">
-                <div>
-                    <p class="modal-overview-text">${d.description}</p>
-                    <div style="margin-top:1rem; font-size:0.8125rem; line-height:1.6; background:var(--bg-surface-warm); padding:0.85rem; border-radius:4px;">
-                        <div><strong>🗓️ Best Time:</strong> ${d.best_season}</div>
-                        <div><strong>⏳ Ideal Duration:</strong> ${d.ideal_days}</div>
-                        <div><strong>💰 Average Daily Budget:</strong> ₹${d.avg_daily_budget.toLocaleString()} / person</div>
-                    </div>
-                </div>
-            </div>
-
-            <h3 class="modal-section-h3">Key Attractions & Verified Ticket Rates</h3>
-            <div class="modal-attractions-list">
-                ${attractionsHtml}
-            </div>
-
-            <h3 class="modal-section-h3">Iconic Regional Flavors</h3>
-            <div class="modal-foods-grid">
-                ${foodsHtml}
-            </div>
-
-            <h3 class="modal-section-h3">Cultural Etiquette & Local Wisdom</h3>
-            <ul class="culture-tips-list">
-                ${tipsHtml}
-            </ul>
-
-            <h3 class="modal-section-h3">How to Reach ${d.name}</h3>
-            <div style="font-size:0.8125rem; color:var(--text-muted); line-height:1.6; background:var(--bg-page); padding:1rem; border-radius:4px;">
-                <p><strong>✈️ By Air:</strong> ${reach.air || 'Connected via domestic flights'}</p>
-                <p><strong>🚆 By Rail:</strong> ${reach.rail || 'Indian Railways express connectivity'}</p>
-                <p><strong>🚗 By Road:</strong> ${reach.road || 'National Highway corridors'}</p>
-            </div>
-
-            <div style="margin-top:1.75rem; text-align:right;">
-                <button type="button" class="btn btn-primary" onclick="selectDestinationForPlanner('${d.id}')">
-                    Plan Itinerary for ${d.name} &rarr;
-                </button>
-            </div>
-        `;
-
-    } catch (err) {
-        modalBody.innerHTML = `<p style="color:var(--color-danger);">Failed to load details: ${err.message}</p>`;
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.style.display === 'block') {
+                modal.style.display = 'none';
+                modal.setAttribute('aria-hidden', 'true');
+            }
+        });
     }
 }
 
-window.selectDestinationForPlanner = function(destId) {
+async function openDestinationDetails(idOrName) {
     const modal = document.getElementById('destinationModal');
-    if (modal) modal.classList.remove('open');
+    const titleEl = document.getElementById('modalDestTitle');
+    const stateTag = document.getElementById('modalStateTag');
+    const bodyEl = document.getElementById('modalBodyContent');
 
-    const plannerSelect = document.getElementById('plannerDestination');
-    if (plannerSelect) plannerSelect.value = destId;
+    if (!modal || !bodyEl) return;
+
+    modal.style.display = 'block';
+    modal.setAttribute('aria-hidden', 'false');
+
+    if (titleEl) titleEl.textContent = 'Loading Destination...';
+    if (stateTag) stateTag.textContent = 'India';
+    bodyEl.innerHTML = `
+        <div class="modal-loading-skeleton">
+            <div class="spinner-ring" style="margin: 2rem auto;"></div>
+            <p style="text-align:center; color:var(--text-muted);">Consulting verified tourist and geographic records...</p>
+        </div>
+    `;
+
+    try {
+        const resp = await fetch(`/api/place/details?id=${encodeURIComponent(idOrName)}`);
+        const data = await resp.json();
+
+        if (!data.success) {
+            throw new Error(data.error || 'Destination not found');
+        }
+
+        renderDestinationModalBody(data);
+    } catch (err) {
+        bodyEl.innerHTML = `
+            <div class="modal-error-box">
+                <p>⚠️ Could not load destination details: ${escapeHtml(err.message)}</p>
+                <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('destinationModal').style.display='none'">Close</button>
+            </div>
+        `;
+    }
+}
+
+function renderDestinationModalBody(data) {
+    const titleEl = document.getElementById('modalDestTitle');
+    const stateTag = document.getElementById('modalStateTag');
+    const bodyEl = document.getElementById('modalBodyContent');
+
+    if (titleEl) titleEl.textContent = data.name;
+    if (stateTag) stateTag.textContent = data.state || 'India';
+
+    const gallery = data.gallery && data.gallery.length > 0 ? data.gallery : [
+        { url: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=1000&q=80', attribution: 'Travel Archive', title: data.name }
+    ];
+
+    const weatherBadge = data.weather && data.weather.temperature !== undefined ? `
+        <div class="modal-weather-card">
+            <span class="weather-icon">${data.weather.icon || '☀️'}</span>
+            <div class="weather-text">
+                <strong>${data.weather.temperature}°C</strong>
+                <span>${escapeHtml(data.weather.condition || 'Pleasant')}</span>
+            </div>
+        </div>
+    ` : '';
+
+    const highlightsList = data.highlights && data.highlights.length > 0 ? `
+        <div class="modal-info-block">
+            <h4>🌟 Key Highlights & Activities</h4>
+            <div class="modal-pills-list">
+                ${data.highlights.map(h => `<span class="detail-pill">${escapeHtml(h)}</span>`).join('')}
+            </div>
+        </div>
+    ` : '';
+
+    const foodsList = data.famous_foods && data.famous_foods.length > 0 ? `
+        <div class="modal-info-block">
+            <h4>🍛 Must-Try Local Delicacies</h4>
+            <ul class="modal-bullet-list">
+                ${data.famous_foods.map(f => `<li><strong>${escapeHtml(f.dish)}:</strong> ${escapeHtml(f.desc)}</li>`).join('')}
+            </ul>
+        </div>
+    ` : '';
+
+    const tipsList = data.culture_tips && data.culture_tips.length > 0 ? `
+        <div class="modal-info-block">
+            <h4>🛕 Local Cultural Etiquette & Tips</h4>
+            <ul class="modal-bullet-list">
+                ${data.culture_tips.map(t => `<li>${escapeHtml(t)}</li>`).join('')}
+            </ul>
+        </div>
+    ` : '';
+
+    const nearbyList = data.nearby_attractions && data.nearby_attractions.length > 0 ? `
+        <div class="modal-info-block">
+            <h4>📍 Nearby Sights to Explore</h4>
+            <div class="modal-nearby-grid">
+                ${data.nearby_attractions.map(n => `
+                    <div class="nearby-mini-card" onclick="openDestinationDetails('${escapeHtml(n.name)}')">
+                        <img src="${escapeHtml(n.image)}" alt="${escapeHtml(n.name)}" class="nearby-mini-img">
+                        <div class="nearby-mini-body">
+                            <strong>${escapeHtml(n.name)}</strong>
+                            <span>${n.distance_km ? `${n.distance_km} km away` : escapeHtml(n.category)}</span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    ` : '';
+
+    bodyEl.innerHTML = `
+        <div class="modal-detail-layout">
+            <!-- Main Photo Gallery -->
+            <div class="modal-gallery-wrap">
+                <div class="gallery-main-img-wrap">
+                    <img src="${escapeHtml(gallery[0].url)}" alt="${escapeHtml(data.name)}" id="galleryMainImg" class="gallery-main-img">
+                    <span class="gallery-caption" id="galleryCaption">${escapeHtml(gallery[0].attribution || 'Wikimedia Commons')}</span>
+                </div>
+                ${gallery.length > 1 ? `
+                <div class="gallery-thumbs-row">
+                    ${gallery.map((g, idx) => `
+                        <img src="${escapeHtml(g.url)}" alt="${escapeHtml(g.title || '')}" class="gallery-thumb ${idx === 0 ? 'active' : ''}" onclick="switchModalGalleryImage('${escapeHtml(g.url)}', '${escapeHtml(g.attribution || '')}', this)">
+                    `).join('')}
+                </div>
+                ` : ''}
+            </div>
+
+            <!-- Quick Specs Header -->
+            <div class="modal-specs-bar">
+                <div class="spec-col">
+                    <span class="spec-label">Category</span>
+                    <span class="spec-val">${escapeHtml(data.category)}</span>
+                </div>
+                <div class="spec-col">
+                    <span class="spec-label">Ideal Days</span>
+                    <span class="spec-val">${escapeHtml(data.ideal_days || '1-2 Days')}</span>
+                </div>
+                <div class="spec-col">
+                    <span class="spec-label">Best Season</span>
+                    <span class="spec-val">${escapeHtml(data.best_season ? data.best_season.split('(')[0] : 'Year-round')}</span>
+                </div>
+                ${weatherBadge}
+            </div>
+
+            <!-- Verified Pricing & Timings Notice -->
+            <div class="modal-verification-alert">
+                <div class="alert-icon">ℹ️</div>
+                <div class="alert-text">
+                    <strong>Verified Visitor Advisory:</strong>
+                    <p>${escapeHtml(data.entry_fee_note || 'Please check ASI ticketing portal for verified entry fees.')} ${escapeHtml(data.opening_hours || '')}</p>
+                </div>
+            </div>
+
+            <!-- Short Introduction Description -->
+            <div class="modal-description-box">
+                <p>${escapeHtml(data.description)}</p>
+            </div>
+
+            ${highlightsList}
+            ${foodsList}
+            ${tipsList}
+            ${nearbyList}
+
+            <!-- Action Buttons Footer -->
+            <div class="modal-actions-footer">
+                <button type="button" class="btn btn-primary" onclick="selectDestinationForPlanner('${escapeHtml(data.id || data.name)}'); document.getElementById('destinationModal').style.display='none';">
+                    Plan Trip Here
+                </button>
+                <a href="${data.google_maps_url || '#'}" target="_blank" rel="noopener" class="btn btn-outline">
+                    🧭 Directions (Google Maps)
+                </a>
+                <button type="button" class="btn btn-outline" onclick="toggleBookmark('${escapeHtml(data.id || data.name)}', '${escapeHtml(data.name)}')">
+                    🔖 Save Place
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function switchModalGalleryImage(url, attr, thumbEl) {
+    const mainImg = document.getElementById('galleryMainImg');
+    const cap = document.getElementById('galleryCaption');
+    if (mainImg) mainImg.src = url;
+    if (cap) cap.textContent = attr || 'Wikimedia Commons';
+
+    document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
+    if (thumbEl) thumbEl.classList.add('active');
+}
+
+// Global hook for selecting destination into planner
+window.selectDestinationForPlanner = function(destIdOrName) {
+    const destSelect = document.getElementById('plannerDestination');
+    if (destSelect) {
+        let matched = false;
+        for (let opt of destSelect.options) {
+            if (opt.value.toLowerCase() === destIdOrName.toLowerCase() || opt.text.toLowerCase().includes(destIdOrName.toLowerCase())) {
+                destSelect.value = opt.value;
+                matched = true;
+                break;
+            }
+        }
+        if (!matched) {
+            // Append as new option
+            const newOpt = document.createElement('option');
+            newOpt.value = destIdOrName.toLowerCase();
+            newOpt.textContent = destIdOrName;
+            destSelect.appendChild(newOpt);
+            destSelect.value = destIdOrName.toLowerCase();
+        }
+    }
 
     const plannerSec = document.getElementById('planner');
     if (plannerSec) {
         plannerSec.scrollIntoView({ behavior: 'smooth' });
-        showToast('Destination loaded into planner!', 'info');
     }
 };
 
-/**
- * Updates Saved Trips Badge Count
- */
-function updateSavedTripsCounter() {
-    const badge = document.getElementById('savedTripsCount');
-    if (!badge) return;
-
-    fetch('/api/trips')
-        .then(res => res.json())
-        .then(data => {
-            if (data.success && data.count !== undefined) {
-                badge.textContent = data.count;
-            }
-        })
-        .catch(() => {});
-}
-
-window.showToast = showToast;
-window.updateSavedTripsCounter = updateSavedTripsCounter;
+window.openDestinationModal = function(id) {
+    openDestinationDetails(id);
+};

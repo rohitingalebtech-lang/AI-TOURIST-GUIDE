@@ -1,6 +1,7 @@
 /**
  * planner.js
- * Trip Planner logic, day-by-day dynamic itinerary generation, trip saving & deletion.
+ * Trip Planner logic, date validation, day-by-day dynamic itinerary generation,
+ * budget-based destination recommendations, trip saving & deletion.
  */
 
 let currentGeneratedItinerary = null;
@@ -8,21 +9,53 @@ let currentGeneratedItinerary = null;
 document.addEventListener('DOMContentLoaded', () => {
     initPlannerControls();
     initSavedTripsActions();
+    initDatePickers();
 });
 
+function initDatePickers() {
+    const departInput = document.getElementById('plannerDepartDate');
+    const returnInput = document.getElementById('plannerReturnDate');
+
+    if (!departInput || !returnInput) return;
+
+    // Set today as minimum departure date
+    const today = new Date().toISOString().split('T')[0];
+    departInput.min = today;
+
+    // Default dates: tomorrow to +4 days
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const returnDate = new Date();
+    returnDate.setDate(returnDate.getDate() + 4);
+
+    departInput.value = tomorrow.toISOString().split('T')[0];
+    returnInput.min = departInput.value;
+    returnInput.value = returnDate.toISOString().split('T')[0];
+
+    departInput.addEventListener('change', () => {
+        returnInput.min = departInput.value;
+        if (returnInput.value < departInput.value) {
+            returnInput.value = departInput.value;
+        }
+    });
+}
+
+function calculateDaysBetween(date1Str, date2Str) {
+    if (!date1Str || !date2Str) return 3;
+    const d1 = new Date(date1Str);
+    const d2 = new Date(date2Str);
+    const diffTime = Math.abs(d2 - d1);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(1, Math.min(diffDays + 1, 14));
+}
+
 function initPlannerControls() {
-    const durationInput = document.getElementById('plannerDuration');
-    const durationDisplay = document.getElementById('durationValueDisplay');
     const plannerForm = document.getElementById('tripPlannerForm');
     const generateBtn = document.getElementById('generatePlanBtn');
-
-    // Sync duration slider
-    if (durationInput && durationDisplay) {
-        durationInput.addEventListener('input', (e) => {
-            const val = e.target.value;
-            durationDisplay.textContent = `${val} Day${val > 1 ? 's' : ''}`;
-        });
-    }
+    const departInput = document.getElementById('plannerDepartDate');
+    const returnInput = document.getElementById('plannerReturnDate');
+    const destSelect = document.getElementById('plannerDestination');
+    const budgetInput = document.getElementById('plannerTotalBudget');
 
     // Tier Cards Radio Styling Sync
     const tierRadios = document.querySelectorAll('input[name="plannerBudgetTier"], input[name="plannerPace"]');
@@ -30,22 +63,41 @@ function initPlannerControls() {
         radio.addEventListener('change', () => {
             const groupName = radio.getAttribute('name');
             document.querySelectorAll(`input[name="${groupName}"]`).forEach(r => {
-                r.closest('.tier-card').classList.remove('active');
+                const parent = r.closest('.tier-card');
+                if (parent) parent.classList.remove('active');
             });
-            radio.closest('.tier-card').classList.add('active');
+            const parent = radio.closest('.tier-card');
+            if (parent) parent.classList.add('active');
         });
     });
 
-    // Form Submission
     if (plannerForm) {
         plannerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const startingCity = document.getElementById('plannerStartCity').value.trim() || 'Delhi';
-            const destinationId = document.getElementById('plannerDestination').value;
-            const durationDays = parseInt(durationInput.value, 10) || 3;
-            const travelerType = document.getElementById('plannerTravelerType').value;
-            
+            const startingCity = document.getElementById('plannerStartCity').value.trim() || 'Pune';
+            let destinationId = destSelect ? destSelect.value : 'jaipur';
+            const totalBudget = parseInt(budgetInput ? budgetInput.value : '12000', 10) || 12000;
+            const travelers = parseInt(document.getElementById('plannerTravelers')?.value || '2', 10);
+            const transportMode = document.getElementById('plannerTransportMode')?.value || 'Train';
+
+            // Validate dates
+            const departDate = departInput ? departInput.value : '';
+            const returnDate = returnInput ? returnInput.value : '';
+
+            if (departDate && returnDate && returnDate < departDate) {
+                showToast('Return date cannot be earlier than departure date.', 'warning');
+                return;
+            }
+
+            const durationDays = calculateDaysBetween(departDate, returnDate);
+
+            // Handle "suggest" destinations based on budget
+            if (destinationId === 'suggest') {
+                destinationId = suggestDestinationByBudget(totalBudget, travelers, durationDays, startingCity);
+                if (destSelect) destSelect.value = destinationId;
+            }
+
             const budgetTierEl = document.querySelector('input[name="plannerBudgetTier"]:checked');
             const budgetTier = budgetTierEl ? budgetTierEl.value : 'moderate';
 
@@ -69,7 +121,7 @@ function initPlannerControls() {
                         destination_id: destinationId,
                         starting_city: startingCity,
                         duration_days: durationDays,
-                        traveler_type: travelerType,
+                        traveler_type: `${travelers} Person${travelers > 1 ? 's' : ''}`,
                         budget_tier: budgetTier,
                         pace: pace,
                         interests: selectedInterests
@@ -103,259 +155,231 @@ function initPlannerControls() {
         });
     }
 
-    // Save Trip Button
+    // Save Trip Action
     const saveTripBtn = document.getElementById('saveTripBtn');
     if (saveTripBtn) {
         saveTripBtn.addEventListener('click', async () => {
-            if (!currentGeneratedItinerary) return;
+            if (!currentGeneratedItinerary) {
+                showToast('No active itinerary to save', 'warning');
+                return;
+            }
 
-            const dest = currentGeneratedItinerary.destination;
-            const params = currentGeneratedItinerary.parameters;
-
-            const tripPayload = {
-                trip_title: `${dest.name} ${params.duration_days}-Day ${params.pace.charAt(0).toUpperCase() + params.pace.slice(1)} Explorer`,
-                destination_id: dest.id,
-                starting_city: params.starting_city,
-                traveler_type: params.traveler_type,
-                duration_days: params.duration_days,
-                budget_tier: params.budget_tier,
-                pace: params.pace,
-                itinerary_data: currentGeneratedItinerary,
-                notes: `Trip departing from ${params.starting_city}. Profile: ${params.traveler_type}.`
-            };
-
+            const destName = currentGeneratedItinerary.destination ? currentGeneratedItinerary.destination.name : 'India';
+            const tripTitle = `${destName} ${currentGeneratedItinerary.parameters.duration_days}-Day Explorer`;
+            
             try {
                 const response = await fetch('/api/trips/save', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(tripPayload)
+                    body: JSON.stringify({
+                        trip_title: tripTitle,
+                        destination_id: currentGeneratedItinerary.destination.id,
+                        starting_city: currentGeneratedItinerary.parameters.starting_city,
+                        traveler_type: currentGeneratedItinerary.parameters.traveler_type,
+                        duration_days: currentGeneratedItinerary.parameters.duration_days,
+                        budget_tier: currentGeneratedItinerary.parameters.budget_tier,
+                        pace: currentGeneratedItinerary.parameters.pace,
+                        itinerary_data: currentGeneratedItinerary,
+                        notes: `Planned on ${new Date().toLocaleDateString()}`
+                    })
                 });
 
                 const res = await response.json();
                 if (res.success) {
-                    showToast('Trip successfully saved to your profile!', 'success');
+                    showToast('Trip successfully saved to My Trips!', 'success');
                     updateSavedTripsCounter();
-                    refreshSavedTripsList();
                 } else {
-                    showToast('Failed to save trip.', 'error');
+                    showToast('Unable to save trip.', 'error');
                 }
             } catch (err) {
-                showToast(`Save error: ${err.message}`, 'error');
+                showToast('Failed to save trip. Check network.', 'error');
             }
         });
     }
 
-    // Print Button
-    const printItineraryBtn = document.getElementById('printItineraryBtn');
-    if (printItineraryBtn) {
-        printItineraryBtn.addEventListener('click', () => {
+    // Print Itinerary Action
+    const printBtn = document.getElementById('printItineraryBtn');
+    if (printBtn) {
+        printBtn.addEventListener('click', () => {
             window.print();
         });
     }
 }
 
-/**
- * Render Generated Itinerary into DOM
- */
-function renderGeneratedItinerary(data) {
+function suggestDestinationByBudget(totalBudget, travelers, durationDays, origin) {
+    const perDayBudget = Math.floor(totalBudget / Math.max(1, travelers * durationDays));
+    const origLower = origin.toLowerCase();
+
+    // If starting from Pune or Mumbai, choose nearby getaways when budget is tighter
+    if (origLower.includes('pune') || origLower.includes('mumbai')) {
+        if (perDayBudget < 2000) return 'goa';
+        if (perDayBudget < 3500) return 'munnar';
+        return 'udaipur';
+    }
+
+    if (perDayBudget < 2000) return 'varanasi';
+    if (perDayBudget < 3200) return 'jaipur';
+    if (perDayBudget < 4500) return 'goa';
+    return 'leh';
+}
+
+function renderGeneratedItinerary(itinerary) {
     const titleEl = document.getElementById('itineraryDisplayTitle');
     const metaEl = document.getElementById('itineraryDisplayMeta');
     const bannerEl = document.getElementById('itineraryBudgetBanner');
     const daysContainer = document.getElementById('itineraryDaysContainer');
 
-    const dest = data.destination;
-    const params = data.parameters;
-    const summary = data.summary;
+    if (!titleEl || !daysContainer) return;
 
-    titleEl.textContent = `${dest.name} — ${params.duration_days}-Day ${params.pace.charAt(0).toUpperCase() + params.pace.slice(1)} Itinerary`;
-    metaEl.textContent = `Starting from ${params.starting_city} • ${params.traveler_type} • ${params.budget_tier.toUpperCase()} TIER • ~${summary.per_person_per_day}/day`;
+    const dest = itinerary.destination || {};
+    const params = itinerary.parameters || {};
+    const summary = itinerary.summary || {};
+    const breakdown = summary.budget_breakdown || {};
+
+    titleEl.textContent = `${dest.name || 'India'} ${params.duration_days}-Day Curated Journey`;
+    metaEl.textContent = `Starting from ${params.starting_city} • ${params.traveler_type} • ${params.pace.toUpperCase()} Pace • ${params.budget_tier.toUpperCase()} Comfort`;
 
     // Render Budget Banner
     bannerEl.innerHTML = `
         <div class="budget-banner-total">
-            <span>Estimated Total Trip Budget</span>
-            <h4>${summary.total_estimated_budget_inr}</h4>
-            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">
-                Based on authentic local costs in ${dest.state}
-            </div>
+            <span class="banner-lbl">Total Estimated Budget</span>
+            <span class="banner-figure">${summary.total_estimated_budget_inr || '₹0'}</span>
+            <span class="banner-subtext">~${summary.per_person_per_day || '₹0'} / person / day</span>
         </div>
-        <div class="budget-banner-pills">
-            <div class="budget-stat-pill">🏨 Stay (45%): <strong>₹${summary.budget_breakdown.accommodation.toLocaleString()}</strong></div>
-            <div class="budget-stat-pill">🍛 Dining (25%): <strong>₹${summary.budget_breakdown.food_and_dining.toLocaleString()}</strong></div>
-            <div class="budget-stat-pill">🛺 Transit (15%): <strong>₹${summary.budget_breakdown.transport_and_cabs.toLocaleString()}</strong></div>
-            <div class="budget-stat-pill">🎫 Tickets (10%): <strong>₹${summary.budget_breakdown.monument_tickets_activities.toLocaleString()}</strong></div>
-            <div class="budget-stat-pill">🛡️ Buffer (5%): <strong>₹${summary.budget_breakdown.buffer_and_tips.toLocaleString()}</strong></div>
+        <div class="budget-banner-breakdown">
+            <div class="breakdown-grid">
+                <div class="bd-item">
+                    <span class="bd-lbl">Stay (45%)</span>
+                    <strong class="bd-val">₹${(breakdown.accommodation || 0).toLocaleString()}</strong>
+                </div>
+                <div class="bd-item">
+                    <span class="bd-lbl">Food (25%)</span>
+                    <strong class="bd-val">₹${(breakdown.food_and_dining || 0).toLocaleString()}</strong>
+                </div>
+                <div class="bd-item">
+                    <span class="bd-lbl">Transit (15%)</span>
+                    <strong class="bd-val">₹${(breakdown.transport_and_cabs || 0).toLocaleString()}</strong>
+                </div>
+                <div class="bd-item">
+                    <span class="bd-lbl">Sightseeing (10%)</span>
+                    <strong class="bd-val">₹${(breakdown.monument_tickets_activities || 0).toLocaleString()}</strong>
+                </div>
+                <div class="bd-item">
+                    <span class="bd-lbl">Buffer (5%)</span>
+                    <strong class="bd-val">₹${(breakdown.buffer_and_tips || breakdown.buffer_and_emergency || 0).toLocaleString()}</strong>
+                </div>
+            </div>
+            <p class="budget-banner-advisory"><em>💡 ${escapeHtml(summary.packing_advisory || '')}</em></p>
         </div>
     `;
 
-    // Render Days
-    daysContainer.innerHTML = data.days.map(day => `
-        <div class="day-card">
+    // Render Days Accordion Cards
+    daysContainer.innerHTML = (itinerary.days || []).map(day => `
+        <div class="day-plan-card">
             <div class="day-card-header">
-                <div>
-                    <span class="day-badge">Day ${day.day}</span>
-                    <span class="day-theme-title">${day.theme}</span>
+                <div class="day-badge-wrap">
+                    <span class="day-num-badge">Day ${day.day}</span>
+                    <h4 class="day-theme-title">${escapeHtml(day.theme)}</h4>
                 </div>
-                <span class="day-est-cost">Est. Cost: ${day.estimated_daily_budget}</span>
+                <span class="day-est-budget">Est. Budget: ${escapeHtml(day.estimated_daily_budget)}</span>
             </div>
-            <div class="day-card-body">
-                <!-- Morning Slot -->
-                <div class="time-block">
-                    <span class="time-slot-tag">🌅 Morning</span>
-                    <span class="time-slot-time">${day.morning.time}</span>
-                    <h4 class="time-slot-title">${day.morning.title}</h4>
-                    <p class="time-slot-detail">${day.morning.detail}</p>
-                    ${day.morning.tip ? `<div class="time-slot-tip">💡 <strong>Pro Tip:</strong> ${day.morning.tip}</div>` : ''}
-                    <div class="time-slot-transport">🚗 ${day.morning.transport}</div>
-                </div>
 
-                <!-- Afternoon Slot -->
-                <div class="time-block">
-                    <span class="time-slot-tag">☀️ Afternoon</span>
-                    <span class="time-slot-time">${day.afternoon.time}</span>
-                    <h4 class="time-slot-title">${day.afternoon.title}</h4>
-                    ${day.afternoon.food_highlight ? `<div class="time-slot-food">${day.afternoon.food_highlight}</div>` : ''}
-                    <p class="time-slot-detail">${day.afternoon.detail}</p>
-                    <div style="font-size:0.75rem; color:var(--text-subtle); margin-top:auto;">
-                        ⏱️ ${day.afternoon.pace_note || 'Paced for comfort'}
+            <div class="day-card-body">
+                <!-- Morning Segment -->
+                <div class="day-segment">
+                    <div class="segment-time-badge">🌅 Morning: ${escapeHtml(day.morning.time)}</div>
+                    <h5 class="segment-title">${escapeHtml(day.morning.title)}</h5>
+                    <p class="segment-desc">${escapeHtml(day.morning.detail)}</p>
+                    ${day.morning.tip ? `<p class="segment-tip"><strong>💡 Tip:</strong> ${escapeHtml(day.morning.tip)}</p>` : ''}
+                    <div class="segment-meta-tags">
+                        <span>🚕 ${escapeHtml(day.morning.transport || 'Local Cab/Rickshaw')}</span>
+                        <span>🎟️ ${escapeHtml(day.morning.est_cost || '')}</span>
                     </div>
                 </div>
 
-                <!-- Evening Slot -->
-                <div class="time-block">
-                    <span class="time-slot-tag">🌆 Evening & Twilight</span>
-                    <span class="time-slot-time">${day.evening.time}</span>
-                    <h4 class="time-slot-title">${day.evening.title}</h4>
-                    <p class="time-slot-detail">${day.evening.detail}</p>
-                    ${day.evening.tip ? `<div class="time-slot-tip">🪔 <strong>Local Etiquette:</strong> ${day.evening.tip}</div>` : ''}
+                <!-- Afternoon Segment -->
+                <div class="day-segment">
+                    <div class="segment-time-badge">☀️ Afternoon: ${escapeHtml(day.afternoon.time)}</div>
+                    <h5 class="segment-title">${escapeHtml(day.afternoon.title)}</h5>
+                    ${day.afternoon.food_highlight ? `<div class="food-highlight-box">🍲 ${escapeHtml(day.afternoon.food_highlight)}</div>` : ''}
+                    <p class="segment-desc">${escapeHtml(day.afternoon.detail)}</p>
+                    ${day.afternoon.pace_note ? `<p class="segment-tip"><em>${escapeHtml(day.afternoon.pace_note)}</em></p>` : ''}
+                </div>
+
+                <!-- Evening Segment -->
+                <div class="day-segment">
+                    <div class="segment-time-badge">🌙 Evening: ${escapeHtml(day.evening.time)}</div>
+                    <h5 class="segment-title">${escapeHtml(day.evening.title)}</h5>
+                    <p class="segment-desc">${escapeHtml(day.evening.detail)}</p>
+                    ${day.evening.tip ? `<p class="segment-tip"><strong>🛕 Etiquette:</strong> ${escapeHtml(day.evening.tip)}</p>` : ''}
                 </div>
             </div>
         </div>
     `).join('');
 }
 
-/**
- * Saved Trips Management & Actions
- */
 function initSavedTripsActions() {
-    // Delete buttons
-    document.addEventListener('click', async (e) => {
-        if (e.target.matches('.delete-saved-trip-btn') || e.target.closest('.delete-saved-trip-btn')) {
-            const btn = e.target.matches('.delete-saved-trip-btn') ? e.target : e.target.closest('.delete-saved-trip-btn');
-            const tripId = btn.getAttribute('data-trip-id');
+    const container = document.getElementById('savedTripsContainer');
+    if (!container) return;
 
-            if (!confirm('Are you sure you want to delete this saved itinerary?')) return;
-
-            try {
-                const response = await fetch(`/api/trips/${tripId}`, { method: 'DELETE' });
-                const res = await response.json();
-                if (res.success) {
-                    showToast('Trip deleted.', 'info');
-                    const card = document.querySelector(`.saved-trip-card[data-trip-id="${tripId}"]`);
-                    if (card) card.remove();
-                    updateSavedTripsCounter();
-                    checkEmptySavedTrips();
+    container.addEventListener('click', async (e) => {
+        const delBtn = e.target.closest('.delete-saved-trip-btn');
+        if (delBtn) {
+            const tripId = delBtn.getAttribute('data-trip-id');
+            if (confirm('Are you sure you want to delete this saved itinerary?')) {
+                try {
+                    const resp = await fetch(`/api/trips/${tripId}`, { method: 'DELETE' });
+                    const res = await resp.json();
+                    if (res.success) {
+                        const card = delBtn.closest('.saved-trip-card');
+                        if (card) card.remove();
+                        showToast('Trip deleted successfully', 'info');
+                        updateSavedTripsCounter();
+                    }
+                } catch (err) {
+                    showToast('Failed to delete trip', 'error');
                 }
-            } catch (err) {
-                showToast(`Delete failed: ${err.message}`, 'error');
             }
+            return;
         }
 
-        // View details button
-        if (e.target.matches('.view-saved-itinerary-btn') || e.target.closest('.view-saved-itinerary-btn')) {
-            const btn = e.target.matches('.view-saved-itinerary-btn') ? e.target : e.target.closest('.view-saved-itinerary-btn');
-            const tripId = btn.getAttribute('data-trip-id');
-
-            try {
-                const response = await fetch('/api/trips');
-                const data = await response.json();
-                if (data.success && data.data) {
-                    const trip = data.data.find(t => t.id === tripId);
-                    if (trip && trip.itinerary_data) {
-                        currentGeneratedItinerary = trip.itinerary_data;
-                        renderGeneratedItinerary(currentGeneratedItinerary);
-                        const resultContainer = document.getElementById('itineraryResultContainer');
-                        if (resultContainer) {
-                            resultContainer.style.display = 'block';
-                            resultContainer.scrollIntoView({ behavior: 'smooth' });
-                            showToast(`Loaded ${trip.trip_title}`, 'info');
-                        }
-                    }
-                }
-            } catch (err) {
-                showToast(`Unable to open trip: ${err.message}`, 'error');
-            }
+        const viewBtn = e.target.closest('.view-saved-itinerary-btn');
+        if (viewBtn) {
+            const tripId = viewBtn.getAttribute('data-trip-id');
+            loadAndDisplaySavedTrip(tripId);
         }
     });
 }
 
-function checkEmptySavedTrips() {
-    const grid = document.querySelector('.saved-trips-grid');
-    const container = document.getElementById('savedTripsContainer');
-    if (!grid || grid.children.length === 0) {
-        if (container) {
-            container.innerHTML = `
-                <div class="empty-state-card" id="emptySavedTrips">
-                    <div class="empty-icon">🗺️</div>
-                    <h3 class="empty-title">No Saved Trips Yet</h3>
-                    <p class="empty-desc">
-                        Use our Personalized Trip Planner above to generate your custom day-by-day itinerary and click "Save to My Trips".
-                    </p>
-                    <a href="#planner" class="btn btn-primary">Start Planning Now</a>
-                </div>
-            `;
+async function loadAndDisplaySavedTrip(tripId) {
+    try {
+        const resp = await fetch('/api/trips');
+        const data = await resp.json();
+        if (data.success && data.data) {
+            const trip = data.data.find(t => t.id === tripId);
+            if (trip && trip.itinerary_data) {
+                currentGeneratedItinerary = trip.itinerary_data;
+                renderGeneratedItinerary(currentGeneratedItinerary);
+
+                const resultContainer = document.getElementById('itineraryResultContainer');
+                if (resultContainer) {
+                    resultContainer.style.display = 'block';
+                    resultContainer.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
         }
+    } catch (e) {
+        showToast('Could not load saved trip details', 'error');
     }
 }
 
-async function refreshSavedTripsList() {
-    try {
-        const response = await fetch('/api/trips');
-        const res = await response.json();
-        if (!res.success || !res.data) return;
-
-        const container = document.getElementById('savedTripsContainer');
-        if (!container) return;
-
-        if (res.data.length === 0) {
-            checkEmptySavedTrips();
-            return;
-        }
-
-        container.innerHTML = `
-            <div class="saved-trips-grid">
-                ${res.data.map(trip => `
-                    <div class="saved-trip-card" data-trip-id="${trip.id}">
-                        <div class="saved-trip-header">
-                            <div>
-                                <span class="trip-dest-badge">${trip.dest_name || 'India Trip'}</span>
-                                <h3 class="trip-title">${trip.trip_title}</h3>
-                            </div>
-                            <span class="trip-date">${trip.created_at ? trip.created_at.slice(0, 10) : ''}</span>
-                        </div>
-                        <div class="saved-trip-meta">
-                            <span>🗓️ ${trip.duration_days} Days</span>
-                            <span>👤 ${trip.traveler_type}</span>
-                            <span>💰 ${trip.budget_tier}</span>
-                            <span>📍 From ${trip.starting_city}</span>
-                        </div>
-                        ${trip.notes ? `<p class="saved-trip-notes">📝 <em>${trip.notes}</em></p>` : ''}
-                        <div class="saved-trip-actions">
-                            <button type="button" class="btn btn-primary btn-sm view-saved-itinerary-btn" data-trip-id="${trip.id}">
-                                View Details
-                            </button>
-                            <a href="/trip/print/${trip.id}" target="_blank" class="btn btn-outline btn-sm">
-                                🖨️ PDF / Print
-                            </a>
-                            <button type="button" class="btn btn-danger-outline btn-sm delete-saved-trip-btn" data-trip-id="${trip.id}">
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-    } catch (e) {
-        console.error('Failed to refresh saved trips:', e);
-    }
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+    }[tag] || tag));
 }

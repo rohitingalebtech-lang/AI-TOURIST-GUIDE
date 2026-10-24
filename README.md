@@ -1,175 +1,171 @@
 # 🇮🇳 PERSONALISED AI TOURIST GUIDE (YĀTRĀ AI)
 
-A complete, production-ready, authentic web application designed to help travelers discover destinations across India, explore verified attractions and real ticket pricing, compare transport routes, plan realistic trips by budget, generate custom daily itineraries, and consult an intelligent travel assistant.
+A complete, professional, production-ready **AI Tourist Guide for travelling across India**.
 
-Built as an accessible, cost-effective full-stack project utilizing free, standard libraries and open data with zero required commercial dependencies or paid hosting requirements.
-
----
-
-## 🌟 Highlights & Core Features
-
-1. **Editorial Travel Aesthetic**:
-   - Designed with an editorial travel magazine visual direction (deep forest green accents `#163A2E`, warm cream and parchment tones `#FAF8F5`, `#F4EFE6`, and warm spice accents `#C2633E`).
-   - Clean card architecture, responsive grids, and typography pairing `Playfair Display` with `Plus Jakarta Sans`.
-   - Real, curated high-resolution photography without generic AI-generated stock fillers.
-
-2. **Destination Discovery Across India**:
-   - Spanning North, South, West, East, and Northeast India (Jaipur, Varanasi, Munnar, Goa, Agra, Leh Ladakh, Udaipur, Rishikesh, Hampi, Darjeeling, Kochi, Shillong, Amritsar, Pondicherry, Kaziranga).
-   - Filterable by geographic region, travel category (Heritage, Spiritual, Hills, Beaches, Wildlife, Adventure), season, and daily budget tier.
-   - Comprehensive attraction details: Archaeological Survey of India (ASI) ticket fees for domestic vs. international visitors, timings, insider tips, and cultural etiquette.
-
-3. **Interactive Map of India (Leaflet + OpenStreetMap)**:
-   - Full interactive map powered by Leaflet and OpenStreetMap tiles (100% free, no credit card or Google Maps API key required).
-   - Custom color-coded pins categorized by destination style with rich preview popups.
-   - Live category filter pills on the map.
-
-4. **Personalized Trip Planner & Day-by-Day Itinerary Generator**:
-   - Select departure city, target destination, trip length (1 to 7 days), traveler profile (Solo, Couple, Family, Friends, Senior), budget tier, and travel pace (Relaxed, Balanced, Packed).
-   - Dynamically constructs a structured schedule broken down into **Morning**, **Afternoon**, and **Evening** slots with authentic dining recommendations, monument logistics, and daily cost estimates.
-
-5. **Financial Clarity & Dynamic Budget Calculator**:
-   - Live expense calculator for travelers, trip length, and tier.
-   - Transparent visual breakdown: Accommodation (45%), Food (25%), Local Transit (15%), Sightseeing (10%), Buffer (5%).
-   - Actionable money-saving travel advice (IRCTC advance booking, metro smartcards, ASI e-ticket discounts).
-
-6. **Inter-City Transport Comparison Engine**:
-   - Compare Flights, High-Speed Trains (Vande Bharat, Shatabdi, Gatimaan), AC Volvo Buses, and Expressway Cabs for major Indian corridors.
-   - Duration, estimated fare ranges in INR (₹), and realistic booking guidance.
-
-7. **"Ananya" — Intelligent AI Travel Assistant**:
-   - Chatbot with deep domain expertise in Indian travel:
-     - IRCTC train reservations, Tatkal booking rules, and Foreign Tourist Quota.
-     - UPI digital payments for foreigners (*UPI One World*).
-     - Food hygiene, avoiding Delhi belly, and water safety.
-     - Temple dress codes, footwear customs, and cultural norms.
-     - Solo female travel safety, verified night transit, and emergency numbers (**112**, **1091**, **1363**).
-     - Common tourist scams and prevention.
-   - Works 100% standalone out of the box with zero required external API keys, while seamlessly supporting optional Google Gemini API keys via `.env`.
-
-8. **Practical Traveler Handbook**:
-   - In-depth verified guides for Indian e-Visa, UPI and ATM fees, SIM cards (Airtel/Jio) and eSIMs, cultural etiquette, and emergency dispatch.
-
-9. **Interactive Packing Checklist**:
-   - Categorized by Documents, Modest & Seasonal Clothing, Health & First Aid, and Electronics.
-   - Checkbox state persists in `localStorage`.
-   - Real-time progress bar, custom item addition, and print-ready format.
-
-10. **Saved Trips & PDF/Printable Export**:
-    - Persists generated itineraries in SQLite database and provides a dedicated print/PDF stylesheet (`/trip/print/<trip_id>`).
+Users can search for any city, landmark, fort, or temple across India, view real photographs from Wikimedia Commons, check live weather from Open-Meteo, plan realistic budget trips, compare transport options with verified booking links, and consult **Ananya**, an intelligent multi-lingual AI travel assistant supporting English, Hindi (हिंदी), and Marathi (मराठी).
 
 ---
 
-## 🛠️ Tech Stack
+## 🌟 Key Features & Capabilities
 
-- **Backend**: Python 3.11+, Flask, SQLite3, Requests, Python-Dotenv, Gunicorn.
-- **Frontend**: Semantic HTML5, Vanilla CSS3 (Custom Design System), Vanilla JavaScript (ES6+ modular scripts), Leaflet 1.9.4.
-- **Map Tiles**: OpenStreetMap.
-- **Data Persistence**: SQLite (`travel_guide.db`) automatically seeded on initial launch.
-- **Deployment**: Render / Heroku ready with `Procfile` and `render.yaml`.
+### 1. Search All Across India (OpenStreetMap + Wikipedia API)
+* **Not restricted to hardcoded cities**: Search for any city, town, region, landmark, fort, temple, waterfall, beach, or national park in India (e.g. Pune, Mumbai, Delhi, Jaipur, Goa, Manali, Chakan, Nashik, Hampi, Shaniwar Wada, Dagdusheth Halwai Ganpati Temple, Sinhagad Fort, Ajanta Caves).
+* **Live Nominatim Geocoding**: Free, accurate OpenStreetMap geocoding with custom User-Agent, debouncing (350ms), and SQLite caching to strictly respect API usage policies (1 req/sec).
+* **Real Photographs & Verified Information**: Real destination photographs from Wikimedia Commons with CC-BY-SA attribution and verified Wikipedia extracts, with attractive high-res fallbacks.
+* **Photographic Card Grid**: Cards display destination photo, place name & state, 1-line summary, category, distance from searched city, "View Details", "View on Map", and "Save Place" buttons.
+
+### 2. Rich Destination Details Modal
+* **Wikimedia Photo Gallery**: Interactive photo gallery carousel with thumbnail navigation and licensing attribution.
+* **Live Weather Integration**: Real-time temperature (°C), conditions icon, and 3-day forecast powered by Open-Meteo (keyless & free).
+* **Verified Advisory Notice**: Clear notice distinguishing Archaeological Survey of India (ASI) verified monument rates from variable local fees.
+* **Logistics & Culture**: Best visiting season, ideal duration, authentic regional foods, cultural etiquette tips, and external Google Maps directions link.
+
+### 3. Compact Interactive Map of India (Leaflet + OSM)
+* **OpenStreetMap Leaflet Map**: Free, open map tiles with custom category-coded pins (Crimson Maroon for Heritage, Warm Saffron for Spiritual, Ocean Blue for Beaches, Forest Green for Mountains).
+* **Two-Way Synchronization**:
+  * Clicking "Map" on any card centers the map, zooms in, and opens its interactive popup.
+  * Clicking any map pin highlights and smoothly scrolls to the corresponding card in the grid.
+* **Map Controls**: Category filter pills and a "Center Map" bounds fitting button.
+
+### 4. Simple Budget-Based Trip Planner
+* **Input Parameters**: Starting city, destination city (or "Suggest Destinations for My Budget"), total budget in INR, number of travelers, departure and return dates, travel pace (Relaxed, Balanced, Packed), comfort tier, and travel interests.
+* **Date Validation**: Ensures return date is on or after departure date, with automatic trip duration calculation.
+* **Dynamic Day-by-Day Itinerary**: Generates a complete schedule divided into Morning, Afternoon, and Evening slots with realistic pacing, meal suggestions, and ASI entry fees.
+* **Transparent Travel Math**: Itemized breakdown: Stay (45%), Food (25%), Transit (15%), Sightseeing (10%), Buffer (5%), with per-person and daily calculations.
+* **Persistence & Printable Export**: Save itineraries to SQLite database (`/api/trips/save`), access under Saved Places, and generate clean print/PDF exports (`/trip/print/<trip_id>`).
+
+### 5. Inter-City Transport Comparison Engine
+* **Dynamic Route Calculator**: Compare travel between ANY origin and destination in India.
+* **Multi-Modal Comparison**:
+  * **Train**: Sleeper, 3AC, 2AC, and Vande Bharat estimates with direct booking link to [IRCTC](https://www.irctc.co.in/nget/train-search).
+  * **Bus**: AC Sleeper and Volvo Multi-Axle duration and fare brackets with link to [RedBus](https://www.redbus.in).
+  * **Flight**: Economy flight estimates for routes > 250 km with link to [Google Flights](https://www.google.com/travel/flights).
+  * **Taxi / Car**: Realistic road distance calculation (Detour factor 1.25) at ₹14/km + tolls with link to [MakeMyTrip Cabs](https://www.makemytrip.com/cabs/).
+
+### 6. "Ananya" — Multi-Lingual AI Travel Assistant
+* **Floating Chat Widget**: Accessible from every page via the bottom-right launcher button, plus navigation bar trigger.
+* **Multi-Lingual Support**: Fluent in English, Hindi (हिंदी), and Marathi (मराठी) with automatic language detection and manual language pills.
+* **Understands Natural Questions**:
+  * *"I have ₹5,000 and two days. Suggest a trip from Pune."* &rarr; Tailor-made getaways to Sinhagad Fort, Panshet Dam, and Lonavala with cost breakdown under ₹5,000.
+  * *"Which historical places can I visit in Jaipur?"* &rarr; Amber Fort, Hawa Mahal, City Palace, Jantar Mantar, Nahargarh Fort with ASI tickets.
+  * *"Plan a three-day family trip to Goa."* &rarr; Family-friendly beaches (Candolim/Morjim), Fort Aguada, Old Goa UNESCO churches, Spice Plantation, and Mandovi cruise.
+  * *"What should I carry for a monsoon trip?"* &rarr; Comprehensive monsoon packing list (quick-dry layers, vibram-grip footwear, waterproof pouches, umbrella).
+  * *"पुण्यातून दोन दिवसांसाठी कुठे फिरायला जाऊ?"* (Marathi) &rarr; Authentic Marathi response with weekend options.
+  * *"जयपुर में कौन से ऐतिहासिक स्थल देखने लायक हैं?"* (Hindi) &rarr; Authentic Hindi response with heritage monuments.
+* **Interactive Action Buttons**: Bot messages include clickable buttons (`[Plan Trip]`, `[View on Map]`, `[Explore Destination]`) that directly control the website!
+* **Gemini API Integration**: Uses Google Gemini API if `GEMINI_API_KEY` is configured in `.env`, with automatic, zero-error fallback to the rich built-in knowledge engine.
+
+### 7. Practical Traveler Handbook & Packing Checklist
+* **Handbook**: Essential tabs covering e-Visas, UPI for foreigners (*UPI One World*), Indian SIM cards (Airtel/Jio), cultural etiquette, and emergency dispatch (**112**, **1091**, **1363**).
+* **Interactive Checklist**: Categorized packing list with progress bar, custom item addition, and browser `localStorage` persistence.
 
 ---
 
-## 📁 Project Directory Structure
+## 🛠️ Architecture & Tech Stack
 
-```
-├── app.py                      # Main Flask application and RESTful API endpoints
-├── config.py                   # Environment settings and application configuration
-├── database.py                 # SQLite database schema, seeding, and queries
-├── travel_data.py              # Rich, verified Indian travel dataset (destinations, sights, routes)
-├── ai_engine.py                # AI itinerary generator and Ananya chatbot engine
-├── requirements.txt            # Python dependencies (Flask, Gunicorn, Requests, etc.)
-├── Procfile                    # Cloud deployment process command
-├── render.yaml                 # Render cloud infrastructure blueprint
-├── .gitignore                  # Git ignore rules
-├── README.md                   # Complete documentation
-├── static/
-│   ├── css/
-│   │   ├── style.css           # Editorial travel magazine design system & responsive layout
-│   │   └── print.css           # Paper & PDF print-optimized stylesheet
-│   └── js/
-│       ├── app.js              # UI coordinator, search filter, active navigation, modal
-│       ├── map.js              # Leaflet.js interactive map & custom markers
-│       ├── planner.js          # Trip planner & dynamic daily itinerary generator
-│       ├── budget.js           # Budget calculator & transport comparator
-│       ├── chatbot.js          # Ananya AI Travel Assistant
-│       └── checklist.js        # Interactive packing checklist with browser persistence
-└── templates/
-    ├── base.html               # Base layout template with header, footer, toast & modal
-    ├── index.html              # Main interactive single-page portal
-    ├── print_trip.html         # Dedicated clean printable & PDF export view
-    ├── 404.html                # Custom 404 page
-    └── 500.html                # Custom 500 page
-```
+* **Backend**: Python 3.11+, Flask 3.1, SQLite3, Requests, Gunicorn, Python-Dotenv.
+* **Frontend**: Semantic HTML5, Vanilla CSS3 (Custom Design System with editorial green `#163A2E`, terracotta `#C2633E`, and warm gold `#B8860B`), Vanilla JavaScript (ES6+ modular architecture).
+* **Mapping**: Leaflet.js with OpenStreetMap Carto tiles.
+* **Geocoding & Data**: OpenStreetMap Nominatim API, Wikipedia GeoSearch & Search APIs, Wikimedia Commons API.
+* **Weather**: Open-Meteo Keyless API.
+* **Security**: `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `X-XSS-Protection: 1; mode=block`, `Referrer-Policy: strict-origin-when-cross-origin`, parameterised SQL queries, input sanitisation.
 
 ---
 
-## 🚀 Local Development Setup
+## 🚀 Local Setup & Running Instructions
 
-### 1. Clone or Open the Workspace
+### 1. Clone the repository
 ```bash
-git clone <your-repo-url>
-cd "PME project"
+git clone https://github.com/your-username/personalised-ai-tourist-guide.git
+cd personalised-ai-tourist-guide
 ```
 
-### 2. (Optional) Create & Activate a Virtual Environment
+### 2. Create and activate a virtual environment
 ```bash
-# On Windows
+# Windows
 python -m venv venv
 .\venv\Scripts\activate
 
-# On macOS/Linux
+# Linux / macOS
 python3 -m venv venv
 source venv/bin/activate
 ```
 
-### 3. Install Dependencies
+### 3. Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Run the Application
+### 4. Configure environment variables (Optional)
 ```bash
+# Copy example configuration
+cp .env.example .env
+```
+*Note: The application runs 100% standalone out of the box with zero required API keys. If you wish to enable Google Gemini AI, set `GEMINI_API_KEY=your_key` in `.env`.*
+
+### 5. Run the application
+```bash
+# Development mode
 python app.py
+
+# Production WSGI server (Gunicorn)
+gunicorn app:app --bind 127.0.0.1:5000
+```
+Open [http://127.0.0.1:5000](http://127.0.0.1:5000) in your web browser.
+
+---
+
+## 🧪 Testing
+
+The project includes an automated test suite with 100% passing tests:
+
+### Run unit & functional tests (26 automated test cases)
+```bash
+python test_app.py
+```
+Verifies:
+* Database seeding and destination data integrity
+* Search across India (Pune, Delhi, Goa, Chakan, Shaniwar Wada)
+* Empty search and fallback handling
+* Destination details and Wikimedia photo gallery retrieval
+* Open-Meteo live weather API
+* Transport route calculations
+* Budget calculations and date validation
+* Chatbot questions (Pune ₹5,000 budget, Jaipur history, Goa family, monsoon packing, Hindi, Marathi)
+* Itinerary saving, retrieval, printable view, and deletion
+* Production security headers
+
+### Run live server integration tests (15 live HTTP checks)
+```bash
+# Ensure server is running in a separate terminal: python app.py
+python test_live_server.py
 ```
 
-### 5. Access in Your Browser
-Open: [http://127.0.0.1:5000](http://127.0.0.1:5000)
-
-*The SQLite database (`travel_guide.db`) will automatically initialize and populate all destinations and attractions on first launch.*
-
 ---
 
-## 🌐 Free Cloud Deployment on Render
+## ☁️ Free Deployment Guide (Render)
 
-1. Push your repository to **GitHub**:
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit: Personalized AI Tourist Guide India"
-   git branch -M main
-   git remote add origin https://github.com/<your-username>/<your-repo-name>.git
-   git push -u origin main
-   ```
+The project includes `Procfile` and `render.yaml` for one-click deployment on Render:
 
-2. Go to [Render.com](https://render.com) and create a free account.
-3. Click **New +** &rarr; **Web Service**.
-4. Connect your GitHub repository.
-5. Render will automatically detect the Python environment:
+1. Push your repository to **GitHub**.
+2. Log into [Render.com](https://render.com) and click **New + &rarr; Web Service**.
+3. Connect your GitHub repository.
+4. Set the following settings:
+   - **Environment**: `Python`
    - **Build Command**: `pip install -r requirements.txt`
    - **Start Command**: `gunicorn app:app`
-   - **Instance Type**: Free
-6. Click **Deploy Web Service**. Your app will be live with a free HTTPS URL in minutes!
+5. Under **Environment Variables**, add:
+   - `FLASK_DEBUG` = `0`
+   - `SECRET_KEY` = *(click Generate or enter a secure string)*
+   - `PYTHON_VERSION` = `3.11.9`
+   - `GEMINI_API_KEY` = *(optional)*
+6. Click **Create Web Service**. Your app will deploy live with free SSL!
 
 ---
 
-## 🔒 Security & Best Practices
+## 📜 Public API Usage & Attribution
 
-- **Zero SQL Injection**: All database operations use SQLite parameterized queries (`?` placeholders).
-- **Security Headers**: Standard headers added on every response (`X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `X-XSS-Protection`, `Referrer-Policy`).
-- **Input Sanitization**: User inputs escaped before DOM insertion.
-- **No Hardcoded Secrets**: Secrets and optional API keys loaded securely via environment variables.
-
----
-
-## 📜 License
-This project is open-source and free for educational, student, and personal travel use.
+* **OpenStreetMap & Nominatim**: Map tiles & geocoding &copy; [OpenStreetMap contributors](https://www.openstreetmap.org/copyright). Usage follows the Nominatim Acceptable Use Policy with custom identification headers, rate limiting (1 req/sec), and persistent local caching.
+* **Wikimedia Commons / Wikipedia**: Destination images and extracts provided under Creative Commons Attribution-ShareAlike (CC-BY-SA).
+* **Open-Meteo**: Weather forecasts provided under the CC-BY 4.0 license using WMO weather codes.
+* **Indian Railways / ASI**: Train routes and monument fees are reference averages based on published Indian Railway and Archaeological Survey of India schedules.
